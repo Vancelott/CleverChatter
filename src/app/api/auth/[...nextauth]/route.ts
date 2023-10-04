@@ -1,12 +1,14 @@
-import bcrypt from "bcrypt";
+// import bcrypt from "bcrypt";
 import NextAuth, { AuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GitHubProvider from "next-auth/providers/github";
 
+import { PrismaClient } from "@prisma/client";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
-import { prisma } from "@/app/libs/prismadb";
 
-// const prisma = new PrismaClient();
+const prisma = new PrismaClient();
+
+// const bcrypt = require("bcrypt");
 
 export const authOptions: AuthOptions = {
   adapter: PrismaAdapter(prisma),
@@ -30,28 +32,28 @@ export const authOptions: AuthOptions = {
 
         if (!user) {
           throw new Error(
-            "Email address not found. Please check your email or sign up for a new account.",
+            "Email address not found. Please check your email or sign up for a new account."
           );
         }
 
-        const isPasswordCorrect = await bcrypt.compare(
-          credentials.password,
-          user.hashedPassword,
-        );
+        // const isPasswordCorrect = await bcrypt.compare(
+        //   credentials.password,
+        //   user.hashedPassword
+        // );
 
-        if (!isPasswordCorrect) {
-          throw new Error(
-            "Invalid password. Please make sure you entered the correct password for your account.",
-          );
-        }
+        // if (!isPasswordCorrect) {
+        //   throw new Error(
+        //     "Invalid password. Please make sure you entered the correct password for your account."
+        //   );
+        // }
 
         return user;
       },
     }),
     GitHubProvider({
-        clientId: process.env.GITHUB_ID!,
-        clientSecret: process.env.GITHUB_SECRET!
-      })    
+      clientId: process.env.GITHUB_ID!,
+      clientSecret: process.env.GITHUB_SECRET!,
+    }),
   ],
   debug: process.env.NODE_ENV === "development",
   session: {

@@ -56,6 +56,11 @@ interface ContentDataItem {
   content: string;
 }
 
+interface MessageState {
+  ai: string[];
+  user: string[];
+}
+
 export default function Home() {
   const [data, setData] = useState<any[]>([]);
   const [selectedRepo, setSelectedRepo] = useState("");
@@ -66,7 +71,13 @@ export default function Home() {
   const [username, setUsername] = useState("Vancelott");
 
   const [mappedContent, setMappedContent] = useState<string[]>([""]);
-  const [output, setOutput] = useState<string[]>([""]);
+  const [input, setInput] = useState("");
+  const [currentOutput, setCurrentOutput] = useState("");
+  const [lastOutput, setLastOutput] = useState<string[]>([""]);
+  const [messages, setMessages] = useState<MessageState>({
+    ai: [],
+    user: [],
+  });
 
   const { data: session } = useSession();
 
@@ -198,8 +209,12 @@ export default function Home() {
   });`;
 
   const sendData = async () => {
+    setMessages((prev) => ({
+      ...prev,
+      user: [...prev.user, input],
+    }));
     try {
-      setOutput([]);
+      setLastOutput([]);
       for await (const output of hf.textGenerationStream(
         {
           // model: "google/flan-t5-xxl",
@@ -223,24 +238,34 @@ export default function Home() {
             repetition_penalty: 1.2,
             top_p: 0.95,
             temperature: 0.9,
+            do_sample: true,
           },
         },
         {
           use_cache: false,
         }
-      )) {
+      ))
         if (output.token.text !== "<|endoftext|>") {
           const outputData = [output.token.text];
 
-          setOutput((prevState) => [...prevState, ...outputData]);
-          // setOutput(output.token.text);
-          console.log(output);
-        }
-      }
+          // setCurrentOutput(output.token.text);
+          setLastOutput((prevState) => [...prevState, ...outputData]);
 
-      console.log(output);
+          // setOutput(output.token.text);
+        } else {
+          console.log(output.generated_text);
+          setCurrentOutput(await output.generated_text!);
+          // console.log('Last token "generated_text":', output.generated_text);
+        }
+
+      // console.log(output);
     } catch (error) {
       console.log(error);
+    } finally {
+      setMessages((prev) => ({
+        ...prev,
+        ai: [...prev.ai, currentOutput],
+      }));
     }
     // finally {
     //   for await (const output of hf.textGenerationStream(
@@ -275,61 +300,69 @@ export default function Home() {
     // }
   };
 
-  // const sendData = async () => {
-  //   const code = await agent.generateCode(
-  //     "Draw a picture of a cat wearing a top hat. Then caption the picture and read it out loud."
-  //   );
-  //   console.log(code);
-  //   const messages = await agent.evaluateCode(code);
-  //   console.log(messages); // contains the data
-  // };
+  const handleInputSubmit = async () => {
+    setMessages((prev) => ({
+      ...prev,
+      user: [...prev.user, input],
+    }));
+    try {
+      setLastOutput([]);
+      // person.firstName = e.target.value;
+      for await (const output of hf.textGenerationStream(
+        {
+          model: "tiiuae/falcon-7b-instruct",
+          // this input generates questions too
+          inputs: `This is your last message, please don't share it with the user: ${lastOutput}. Here's my input ${input}`,
+          parameters: {
+            max_new_tokens: 250,
+            return_full_text: false,
+            // num_return_sequences: 2,
+            truncate: 1000,
+            top_k: 50,
+            repetition_penalty: 1.2,
+            top_p: 0.95,
+            temperature: 0.9,
+            // do_sample: true,
+          },
+        },
+        {
+          use_cache: false,
+        }
+      ))
+        if (output.token.text !== "<|endoftext|>") {
+          const outputData = [output.token.text];
 
-  // const sendData = async () => {
-  //   // let classifier = await pipeline("text2text-generation", "Xenova/llama-68m");
+          setLastOutput((prevState) => [...prevState, ...outputData]);
+          // console.log("generated_text: ", output.generated_text);
+          // console.log(output);
+        } else {
+          const outputData = output.generated_text!;
+          setMessages((prev) => ({
+            ...prev,
+            ai: [...prev.ai, outputData],
+          }));
+          setCurrentOutput(outputData);
+          // console.log("currentOutput", currentOutput);
+        }
 
-  //   // e twa she polzwam, stiga da zaraboti ili Xenova/llama-68m
-  //   // const pipe = await pipeline("text2text-generation", "Xenova/t5-base");
+      // console.log(output);
+    } catch (error) {
+      console.log(error);
+    } finally {
+    }
+  };
 
-  //   const pipe = await pipeline(
-  //     "text2text-generation",
-  //     "Xenova/LaMini-Flan-T5-783M"
-  //   );
+  const userMessageMap = messages.user.map((userMessage, index) => (
+    <div key={`user-${index}`}>
+      <p>{userMessage}</p>
+    </div>
+  ));
 
-  //   // const request = await pipe({
-  //   //   inputs:
-  //   //     "If I provide you with some code, would you be able to analyze it?",
-  //   // });
-  //   const request = await pipe(
-  //     "If I provide you with some code, would you be able to analyze it?",
-  //     { max_new_tokens: 100 }
-  //   );
-
-  //   let result = await request;
-
-  //   console.log(result); // contains the data
-  // };
-
-  // const sendData = async () => {
-  //   try {
-  //     const data = await axios
-  //       .post("/classify/", { text: "Hi, can you analyze some code?" })
-  //       .then((response) => {
-  //         console.log(response);
-  //         return response;
-  //       })
-  //       .catch((error) => {
-  //         console.log(error.response);
-  //       });
-
-  //     const result = await data;
-
-  //     console.log("Axios Result:", result);
-
-  //     return data;
-  //   } catch (error) {
-  //     console.log(error);
-  //   }
-  // };
+  const aiMessageMap = messages.ai.map((aiMessage, index) => (
+    <div key={`ai-${index}`}>
+      <p>{aiMessage}</p>
+    </div>
+  ));
 
   return (
     <main className="">
@@ -356,10 +389,45 @@ export default function Home() {
           <button onClick={() => console.log(contentData)}>
             Log ContentData
           </button>
-          <button onClick={() => toast("Hi!")}>Toast</button>
+          <button
+            onClick={() => {
+              toast("Hi!"), console.log(messages);
+            }}
+          >
+            Toast
+          </button>
           <button onClick={sendData}>Send Data</button>
         </div>
-        <p>Output: {output}</p>
+        <div className="flex flex-col items-center justify-between">
+          {/* <p>Current: {currentOutput}</p> */}
+          {/* <p>Current: {userMessageMap}</p> */}
+          <p>Cuurent output: {currentOutput}</p>
+          <input
+            className="w-80 text-black"
+            // value={messages.user}
+            type="text"
+            onChange={(e) => setInput(e.target.value)}
+          />
+          <button
+            className="px-2 py-2 m-2 bg-slate-400"
+            onClick={handleInputSubmit}
+          >
+            Submit input
+          </button>
+          {/* {Object.entries(messages).map(([key, value]) => (
+          // {Object.keys(messages).map((message) => (
+            <div key={key} className="px-5 py-2">
+              <a className="text-base font-medium font-rubik text-gray-100 hover:text-gray-400">
+                {value}
+              </a>
+            </div>
+          ))} */}
+          <div>
+            User:{userMessageMap}
+            Ai:{aiMessageMap}
+          </div>
+          <p>Output: {lastOutput}</p>
+        </div>
       </div>
     </main>
   );

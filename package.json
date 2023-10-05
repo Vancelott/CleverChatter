@@ -9,8 +9,6 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@huggingface/agents": "^0.0.5",
-    "@huggingface/hub": "^0.8.4",
     "@huggingface/inference": "^2.6.1",
     "@next-auth/prisma-adapter": "^1.0.7",
     "@octokit/rest": "^20.0.2",

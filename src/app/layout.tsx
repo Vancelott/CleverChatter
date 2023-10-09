@@ -21,10 +21,12 @@ export default async function RootLayout({
   return (
     <html lang="en">
       <AuthContext>
-        <body className="flex flex-col h-screen justify-between">
+        <body>
           <NavBar />
-          <Toaster />
-          {children}
+          <div className="flex flex-col h-screen justify-between">
+            <Toaster />
+            {children}
+          </div>
         </body>
       </AuthContext>
     </html>

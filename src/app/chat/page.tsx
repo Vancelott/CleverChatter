@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useContext, useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import getCurrentUser from "../actions/getCurrentUser";
 import octokit from "../libs/octokit";
@@ -10,7 +10,10 @@ import axios from "axios";
 import toast from "react-hot-toast";
 import { HfInference } from "@huggingface/inference";
 import SendCodeData from "../actions/sendCodeData";
-import repoList, { RepoList } from "../../../components/repoList";
+import repoList, {
+  RepoList,
+  SelectedRepoContext,
+} from "../../../components/repoList";
 import { RepoContent, ContentData, Repository } from "../types";
 
 const hfToken = process.env.HF_ACCESS_TOKEN;
@@ -23,22 +26,28 @@ interface MessageState {
 }
 
 export default function Chat() {
+  const context = useContext(SelectedRepoContext);
+
   const [data, setData] = useState<Repository[]>([]);
   const [selectedRepo, setSelectedRepo] = useState("");
 
   const [submit, setSubmit] = useState(false);
-  const [repoData, setRepoData] = useState<string[]>([""]);
+  const [repoData, setRepoData] = useState<string[]>([]);
   const [contentData, setContentData] = useState<ContentData[]>([]);
   const [username, setUsername] = useState("Vancelott");
 
-  const [mappedContent, setMappedContent] = useState<string[]>([""]);
-  const [input, setInput] = useState("Please write a 3 word sentence.");
+  const [mappedContent, setMappedContent] = useState<string[]>([]);
+  const [input, setInput] = useState("");
   const [currentOutput, setCurrentOutput] = useState("");
   const [lastOutput, setLastOutput] = useState<string[]>([""]);
   const [messages, setMessages] = useState<MessageState>({
     ai: [],
     user: [],
   });
+
+  const [clickCount, setClickCount] = useState(0);
+
+  const [presetInput, setPresetInput] = useState("");
 
   const { data: session } = useSession();
 
@@ -74,7 +83,6 @@ export default function Chat() {
 
         const repoList = await repoGetRequest;
 
-        console.log(repoList);
         setData(repoList);
       };
 
@@ -88,7 +96,8 @@ export default function Chat() {
     </div>
   ));
 
-  const handleSubmit = async (owner: string, repo: string, path: string) => {
+  const fetchItemPaths = async (owner: string, repo: string, path: string) => {
+    // console.log("fetchItemPaths - START");
     setSubmit(true);
     const { data: pullRequest } = await octokit.rest.repos.getContent({
       owner,
@@ -98,32 +107,60 @@ export default function Chat() {
 
     const pathData: string[] = [];
 
-    for (const item of pullRequest) {
-      if (item.type === "dir") {
-        const newData = await handleSubmit(
-          owner,
-          repo,
-          (path = `/${item.path}`)
-        );
-        const allPromises = await Promise.all(newData);
+    try {
+      for await (const item of pullRequest) {
+        if (item.type === "dir") {
+          const newData = await fetchItemPaths(
+            owner,
+            repo,
+            (path = `/${item.path}`)
+          );
+          const allPromises = await Promise.all(newData);
 
-        const filesFilter = allPromises.filter((item) => item.type === "file");
-        const promisesMap = filesFilter.map((item) => item.path);
+          const filesFilter = allPromises.filter(
+            (item) => item.type === "file"
+          );
+          const promisesMap = filesFilter.map((item) => item.path);
 
-        pathData.push(...promisesMap);
+          repoData.push(...promisesMap);
+          // setRepoData((prevRepoData) => [...prevRepoData, ...promisesMap]);
+        }
       }
+
+      // setRepoData((prevRepoData) => [...prevRepoData, ...pathData]);
+    } catch (error) {
+      console.log(error);
+    } finally {
+      // console.log("fetchItemPaths - DONE");
+      // fetchContent(`${username}`, `${selectedRepo}`);
+      // setRepoData((prevRepoData) => [...prevRepoData, ...pathData]);
     }
 
     // setRepoData((prevRepoData) => [...prevRepoData, ...pathData]);
-    setRepoData([...pathData]);
+    // setRepoData([...pathData]);
 
     return pullRequest;
   };
 
+  useEffect(() => {
+    console.log("contentData", contentData);
+  }, [contentData]);
+
+  useEffect(() => {
+    console.log("mappedContent", mappedContent);
+  }, [mappedContent]);
+
+  useEffect(() => {
+    console.log("repoData", repoData);
+  }, [repoData]);
+
   const fetchContent = async (owner: string, repo: string) => {
     const contentDataArray: Array<{ name: string; content: string }> = [];
+    // console.log("repoData in fetchContent:", repoData);
     try {
-      for (const item of repoData) {
+      console.log("repoData in fetchContent:", repoData);
+      for await (const item of repoData) {
+        console.log("item:", item);
         const getContent = await octokit.rest.repos.getContent({
           owner,
           repo,
@@ -131,25 +168,25 @@ export default function Chat() {
         });
 
         const responseData: RepoContent = await getContent;
-        console.log(responseData);
-        // const contentMap = responseData.map((item: any) => item.content);
         const contentObject = {
           name: responseData.data.name,
           content: responseData.data.content,
         };
-        contentDataArray.push(contentObject);
+        contentData.push(contentObject);
       }
 
-      setContentData([...contentDataArray]);
+      // setContentData([...contentDataArray]);
     } catch (error) {
       console.error("Error fetching content:", error);
+    } finally {
     }
 
     return contentData;
   };
 
-  useEffect(() => {
-    const contentMap = contentData.map((item) => item.content);
+  const decodeContent = async () => {
+    console.log("contentData", contentData);
+    const contentMap = await contentData.map((item) => item.content);
 
     // const decodedContent = atob(contentMap);
 
@@ -158,7 +195,21 @@ export default function Chat() {
     );
 
     setMappedContent((prevState) => [...prevState, ...decodedContent]);
-  }, [contentData]);
+  };
+
+  // useEffect(() => {
+  //   if (contentData.length > 0) {
+  //     const contentMap = contentData.map((item) => item.content);
+
+  //     // const decodedContent = atob(contentMap);
+
+  //     const decodedContent = contentMap.map((encodedString) =>
+  //       atob(encodedString)
+  //     );
+
+  //     setMappedContent((prevState) => [...prevState, ...decodedContent]);
+  //   }
+  // }, [contentData]);
 
   const testFunction = `const listingCount = await prisma?.listing.count({
     where: {
@@ -171,12 +222,40 @@ export default function Chat() {
     },
   });`;
 
+  // useEffect(() => {
+  //   if (clickCount === 0) {
+  //     setPresetInput(
+  //       `At the end of this paragraph is my project. Help me prepare for an interview by providing me with example questions which I might get asked about this code specifically. ${mappedContent}`
+  //     );
+  //   }
+  //   // else if (clickCount === 1) {
+  //   //   setPresetInput(
+  //   //     `This is your last message, please don't share it with the user: ${lastOutput}. Let me know how I can improve on my answers. Here's my input ${input}`
+  //   //   );
+  //   // }
+  // }, [clickCount, mappedContent, input, lastOutput, presetInput]);
+
+  // const atobContent = () => {
+  //   if (contentData.length > 0) {
+  //     const contentMap = contentData.map((item) => item.content);
+
+  //     // const decodedContent = atob(contentMap);
+
+  //     const decodedContent = contentMap.map((encodedString) =>
+  //       atob(encodedString)
+  //     );
+
+  //     setMappedContent((prevState) => [...prevState, ...decodedContent]);
+  //   }
+  // };
+
   const sendData = async () => {
     setMessages((prev) => ({
       ...prev,
       user: [...prev.user, input],
     }));
     try {
+      // atobContent();
       setLastOutput([]);
       for await (const output of hf.textGenerationStream(
         {
@@ -190,7 +269,7 @@ export default function Chat() {
           //   "Hi, can you generate questions about a coding specific project, if I provide you with all the details? Disclaimer: there's no need to generate questions at the moment, please wait for me to send the code in the next message.",
 
           // this input generates questions too
-          inputs: `At the end of this paragraph is my project. Help me prepare for an interview by providing me with example questions which I might get asked about this code specifically. ${contentData}`,
+          inputs: `At the end of this paragraph is my project. Help me prepare for an interview by providing me with example questions which I might get asked about this code specifically. ${mappedContent}`,
           // inputs: `At the end of this paragraph is a function from my project. Ask me a 1-2 questions about it - ${testFunction}`,
           parameters: {
             max_new_tokens: 1024,
@@ -216,7 +295,6 @@ export default function Chat() {
 
           // setOutput(output.token.text);
         } else {
-          console.log(output.generated_text);
           setCurrentOutput(await output.generated_text!);
           // console.log('Last token "generated_text":', output.generated_text);
         }
@@ -353,18 +431,18 @@ export default function Chat() {
   //         <div onClick={(event) => event.target}>Your repos: {reposMap}</div>
   //         <p>Currently selected: {selectedRepo}</p>
   //         <button
-  //           onClick={() =>
-  //             handleSubmit(`${username}`, `${selectedRepo}`, "src/app")
-  //           }
+  // onClick={() =>
+  //   handleSubmit(`${username}`, `${selectedRepo}`, "src/app")
+  // }
   //         >
   //           Submit selected repo
   //         </button>
   //         <button onClick={() => console.log(repoData)}>Log RepoData</button>
-  //         <button
-  //           onClick={() => fetchContent(`${username}`, `${selectedRepo}`)}
-  //         >
-  //           Fetch ContentData
-  //         </button>
+  // <button
+  //   onClick={() => fetchContent(`${username}`, `${selectedRepo}`)}
+  // >
+  //   Fetch ContentData
+  // </button>
   //         <button onClick={() => console.log(contentData)}>
   //           Log ContentData
   //         </button>
@@ -375,7 +453,7 @@ export default function Chat() {
   //         >
   //           Toast
   //         </button>
-  //         <button onClick={sendData}>Send Data</button>
+  // <button onClick={sendData}>Send Data</button>
   //         <p className="font-extralight text-4xl pb-4">Your repositories:</p>
   //         <RepoList data={data} />
   //       </div>
@@ -383,12 +461,12 @@ export default function Chat() {
   //         {/* <p>Current: {currentOutput}</p> */}
   //         {/* <p>Current: {userMessageMap}</p> */}
   //         <p>Cuurent output: {currentOutput}</p>
-  //         <input
-  //           className="w-80 text-black"
-  //           // value={messages.user}
-  //           type="text"
-  //           onChange={(e) => setInput(e.target.value)}
-  //         />
+  // <input
+  //   className="w-80 text-black"
+  //   // value={messages.user}
+  //   type="text"
+  //   onChange={(e) => setInput(e.target.value)}
+  // />
   //         <button
   //           className="px-2 py-2 m-2 bg-slate-400"
   //           onClick={handleInputSubmit}
@@ -413,12 +491,77 @@ export default function Chat() {
   //   </main>
   // );
 
-  // const [selectedChildRepo, setSelectedChildRepo] = useState("");
+  const [selectedChildRepo, setSelectedChildRepo] = useState("");
 
-  // const getSelectedRepo = async (childData: string) => {
-  //   const data = await childData;
-  //   setSelectedChildRepo(data);
-  //   // return selectedChildRepo;
+  const getSelectedRepo = (name: string) => {
+    const data = name;
+    setSelectedChildRepo(data);
+    // return selectedChildRepo;
+  };
+
+  // const [selectedRepoFromContext, setSelectedRepoFromContext] = useContext(SelectedRepoContext)
+
+  const [hideList, setHideList] = useState(false);
+
+  // const finalSubmit = async () => {
+  //   new Promise<void>(async (resolve, reject) => {
+  //     try {
+  //       await handleSubmit(`${username}`, `${selectedChildRepo}`, "src/app");
+  //       resolve();
+  //     } catch (error) {
+  //       reject(error);
+  //       console.log(error);
+  //     } finally {
+  //       new Promise<void>(async (resolve, reject) => {
+  //         await fetchContent(`${username}`, `${selectedRepo}`);
+  //       });
+  //       resolve();
+  //       await sendData;
+  //     }
+  //   });
+  // };
+
+  const handleSubmit = async () => {
+    try {
+      setHideList(true);
+      await fetchItemPaths(`${username}`, `${selectedChildRepo}`, "src/app");
+      await fetchContent(`${username}`, `${selectedChildRepo}`);
+      await decodeContent();
+      await sendData();
+    } catch (error) {
+      console.error("Error during first submit:", error);
+    }
+  };
+
+  // const handleSubmit = async () => {
+  //   // setClickCount((prevCount) => prevCount + 1);
+  //   // if (clickCount === 0) {
+  //   try {
+  //     setHideList(true);
+  //     await fetchItemPaths(`${username}`, `${selectedChildRepo}`, "src/app");
+  //     await fetchContent(`${username}`, `${selectedChildRepo}`);
+  //     await sendData();
+  //     // setHideList(true);
+  //     // await fetchItemPaths(`${username}`, `${selectedChildRepo}`, "src/app")
+  //     //   .then(async () => {
+  //     //     await fetchContent(`${username}`, `${selectedChildRepo}`);
+  //     //   })
+  //     //   .then(async () => {
+  //     //     await sendData();
+  //     //   });
+  //   } catch (error) {
+  //     console.error("Error during first submit:", error);
+  //   }
+
+  //   // if (clickCount === 1) {
+  //   //   try {
+  //   //     await sendData();
+  //   //   } catch (error) {
+  //   //     console.error("Error during second submit:", error);
+  //   //   }
+  //   // } else {
+  //   //   await handleInputSubmit();
+  //   // }
   // };
 
   return (
@@ -430,10 +573,23 @@ export default function Chat() {
           <p className="font-extralight text-xl pb-4">
             Choose a repository to prepare on
           </p>
-          <RepoList
-            data={data}
-            // handleCallback={getSelectedRepo}
+          {!hideList && (
+            <RepoList data={data} handleCallback={getSelectedRepo} />
+          )}
+          {!hideList && <p>Currently selected: {selectedChildRepo}</p>}
+          <button
+            onClick={handleSubmit}
+            className="font-semibold text-md px-4 py-2 mt-6 bg-white-0 text-blue-0 rounded-md"
+          >
+            Submit
+          </button>
+          <input
+            className="w-80 my-8 text-black"
+            // value={messages.user}
+            type="text"
+            onChange={(e) => setInput(e.target.value)}
           />
+          <p>Current output: {lastOutput}</p>
         </div>
       </div>
     </>

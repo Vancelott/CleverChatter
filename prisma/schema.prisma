@@ -76,6 +76,7 @@ model User {
 
 model Chat {
     id        String    @id @default(auto()) @map("_id") @db.ObjectId
+    slug      String    @unique
     createdAt DateTime  @default(now())
     updatedAt DateTime  @updatedAt
     published Boolean   @default(false)
@@ -92,8 +93,9 @@ model Chat {
 
 model Message {
     id        String    @id @default(auto()) @map("_id") @db.ObjectId
-    userReq String
-    aiRes String
+    slug      String    @unique
+    userReq String[]
+    aiRes String[]
     chatId String   @db.ObjectId
 
     chat Chat @relation(fields: [chatId], references: [id], onDelete: Cascade)

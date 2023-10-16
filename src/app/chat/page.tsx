@@ -10,11 +10,11 @@ import axios from "axios";
 import toast from "react-hot-toast";
 import { HfInference } from "@huggingface/inference";
 import SendCodeData from "../actions/sendCodeData";
-import repoList, {
-  RepoList,
-  SelectedRepoContext,
-} from "../../../components/repoList";
+import repoList, { RepoList, SelectedRepoContext } from "./components/repoList";
 import { RepoContent, ContentData, Repository } from "../types";
+import createChat from "../actions/createChat";
+import { send } from "process";
+import UpdateChat from "../actions/updateChat";
 
 const hfToken = process.env.HF_ACCESS_TOKEN;
 
@@ -25,7 +25,12 @@ interface MessageState {
   user: string[];
 }
 
-export default function Chat() {
+interface MessageState2 {
+  userReq: string[];
+  aiRes: string[];
+}
+
+export default function Chat({ dbMessages }: { dbMessages: MessageState2 }) {
   const context = useContext(SelectedRepoContext);
 
   const [data, setData] = useState<Repository[]>([]);
@@ -37,7 +42,7 @@ export default function Chat() {
   const [username, setUsername] = useState("Vancelott");
 
   const [mappedContent, setMappedContent] = useState<string[]>([]);
-  const [input, setInput] = useState("");
+  const [userInput, setUserInput] = useState("");
   const [currentOutput, setCurrentOutput] = useState("");
   const [lastOutput, setLastOutput] = useState<string[]>([""]);
   const [messages, setMessages] = useState<MessageState>({
@@ -197,20 +202,6 @@ export default function Chat() {
     setMappedContent((prevState) => [...prevState, ...decodedContent]);
   };
 
-  // useEffect(() => {
-  //   if (contentData.length > 0) {
-  //     const contentMap = contentData.map((item) => item.content);
-
-  //     // const decodedContent = atob(contentMap);
-
-  //     const decodedContent = contentMap.map((encodedString) =>
-  //       atob(encodedString)
-  //     );
-
-  //     setMappedContent((prevState) => [...prevState, ...decodedContent]);
-  //   }
-  // }, [contentData]);
-
   const testFunction = `const listingCount = await prisma?.listing.count({
     where: {
       ...(makeParam && { make: { equals: makeParam } }),
@@ -227,13 +218,12 @@ export default function Chat() {
   //     setPresetInput(
   //       `At the end of this paragraph is my project. Help me prepare for an interview by providing me with example questions which I might get asked about this code specifically. ${mappedContent}`
   //     );
+  //   } else if (clickCount === 1) {
+  //     setPresetInput(
+  //       `This is your last message, please don't share it with the user: ${lastOutput}. Let me know how I can improve on my answers. Here's my input ${userInput}`
+  //     );
   //   }
-  //   // else if (clickCount === 1) {
-  //   //   setPresetInput(
-  //   //     `This is your last message, please don't share it with the user: ${lastOutput}. Let me know how I can improve on my answers. Here's my input ${input}`
-  //   //   );
-  //   // }
-  // }, [clickCount, mappedContent, input, lastOutput, presetInput]);
+  // }, [clickCount, mappedContent, userInput, lastOutput, presetInput]);
 
   // const atobContent = () => {
   //   if (contentData.length > 0) {
@@ -250,10 +240,12 @@ export default function Chat() {
   // };
 
   const sendData = async () => {
-    setMessages((prev) => ({
-      ...prev,
-      user: [...prev.user, input],
-    }));
+    // if (clickCount !== 0) {
+    //   setMessages((prev) => ({
+    //     ...prev,
+    //     user: [...prev.user, userInput],
+    //   }));
+    // }
     try {
       // atobContent();
       setLastOutput([]);
@@ -295,18 +287,22 @@ export default function Chat() {
 
           // setOutput(output.token.text);
         } else {
-          setCurrentOutput(await output.generated_text!);
-          // console.log('Last token "generated_text":', output.generated_text);
+          setCurrentOutput(output.generated_text!);
+          setMessages((prev) => ({
+            ...prev,
+            ai: [...prev.ai, output.generated_text!],
+          }));
         }
 
       // console.log(output);
     } catch (error) {
       console.log(error);
     } finally {
-      setMessages((prev) => ({
-        ...prev,
-        ai: [...prev.ai, currentOutput],
-      }));
+      // setMessages((prev) => ({
+      //   ...prev,
+      //   user: [...prev.user, presetInput],
+      //   ai: [...prev.ai, currentOutput],
+      // }));
     }
     // finally {
     //   for await (const output of hf.textGenerationStream(
@@ -344,18 +340,22 @@ export default function Chat() {
   const handleInputSubmit = async () => {
     setMessages((prev) => ({
       ...prev,
-      user: [...prev.user, input],
+      user: [...prev.user, userInput],
     }));
+
     try {
       setLastOutput([]);
       // person.firstName = e.target.value;
       for await (const output of hf.textGenerationStream(
         {
           model: "tiiuae/falcon-7b-instruct",
-          // this input generates questions too
-          inputs: `This is your last message, please don't share it with the user: ${lastOutput}. Here's my input ${input}`,
+          // inputs:
+          //   clickCount === 1
+          //     ? `Here are my answers, let me know how I can improve them: ${userInput}`
+          //     : `${userInput}`,
+          inputs: `Here are my answers, let me know how I can improve them: ${userInput}`,
           parameters: {
-            max_new_tokens: 250,
+            max_new_tokens: 1024,
             return_full_text: false,
             // num_return_sequences: 2,
             truncate: 1000,
@@ -373,17 +373,17 @@ export default function Chat() {
         if (output.token.text !== "<|endoftext|>") {
           const outputData = [output.token.text];
 
+          // setCurrentOutput(output.token.text);
           setLastOutput((prevState) => [...prevState, ...outputData]);
-          // console.log("generated_text: ", output.generated_text);
-          // console.log(output);
+
+          // setOutput(output.token.text);
         } else {
-          const outputData = output.generated_text!;
+          setCurrentOutput(await output.generated_text!);
           setMessages((prev) => ({
             ...prev,
-            ai: [...prev.ai, outputData],
+            ai: [...prev.ai, output.generated_text!],
           }));
-          setCurrentOutput(outputData);
-          // console.log("currentOutput", currentOutput);
+          // console.log('Last token "generated_text":', output.generated_text);
         }
 
       // console.log(output);
@@ -405,91 +405,21 @@ export default function Chat() {
     </div>
   ));
 
-  const sendCode = async () => {
-    const response = await axios.post("/api/prompt", {
-      prompt: input,
-    });
-    const data = await response.data;
-    console.log(data);
+  // const sendCode = async () => {
+  //   const response = await axios.post("/api/prompt", {
+  //     prompt: input,
+  //   });
+  //   const data = await response.data;
+  //   console.log(data);
 
-    const test = `${data}`;
-    setLastOutput((prevState) => [...prevState, test]);
-    // setMessages((prev) => ({
-    //   ...prev,
-    //   ai: [...prev.ai, data],
-    // }));
-    return data;
-  };
-
-  // return (
-  //   <main className="">
-  //     <div className="grid grid-cols-2 min-h-screen items-center justify-center p-24">
-  //       <div className="flex flex-col items-center justify-between">
-  //         <p>Home page</p>
-  //         <p>User: {username}</p>
-  //         <button onClick={getUserData}>Test list</button>
-  //         <div onClick={(event) => event.target}>Your repos: {reposMap}</div>
-  //         <p>Currently selected: {selectedRepo}</p>
-  //         <button
-  // onClick={() =>
-  //   handleSubmit(`${username}`, `${selectedRepo}`, "src/app")
-  // }
-  //         >
-  //           Submit selected repo
-  //         </button>
-  //         <button onClick={() => console.log(repoData)}>Log RepoData</button>
-  // <button
-  //   onClick={() => fetchContent(`${username}`, `${selectedRepo}`)}
-  // >
-  //   Fetch ContentData
-  // </button>
-  //         <button onClick={() => console.log(contentData)}>
-  //           Log ContentData
-  //         </button>
-  //         <button
-  //           onClick={() => {
-  //             toast("Hi!"), console.log(messages);
-  //           }}
-  //         >
-  //           Toast
-  //         </button>
-  // <button onClick={sendData}>Send Data</button>
-  //         <p className="font-extralight text-4xl pb-4">Your repositories:</p>
-  //         <RepoList data={data} />
-  //       </div>
-  //       <div className="flex flex-col items-center justify-between">
-  //         {/* <p>Current: {currentOutput}</p> */}
-  //         {/* <p>Current: {userMessageMap}</p> */}
-  //         <p>Cuurent output: {currentOutput}</p>
-  // <input
-  //   className="w-80 text-black"
-  //   // value={messages.user}
-  //   type="text"
-  //   onChange={(e) => setInput(e.target.value)}
-  // />
-  //         <button
-  //           className="px-2 py-2 m-2 bg-slate-400"
-  //           onClick={handleInputSubmit}
-  //         >
-  //           Submit input
-  //         </button>
-  //         {Object.entries(messages).map(([key, value]) => (
-  //           // {Object.keys(messages).map((message) => (
-  //           <div key={key} className="px-5 py-2">
-  //             <a className="text-base font-medium font-rubik text-gray-100 hover:text-gray-400">
-  //               {value}
-  //             </a>
-  //           </div>
-  //         ))}
-  //         <div>
-  //           User:{userMessageMap}
-  //           Ai:{aiMessageMap}
-  //         </div>
-  //         <p>Output: {lastOutput}</p>
-  //       </div>
-  //     </div>
-  //   </main>
-  // );
+  //   const test = `${data}`;
+  //   setLastOutput((prevState) => [...prevState, test]);
+  //   // setMessages((prev) => ({
+  //   //   ...prev,
+  //   //   ai: [...prev.ai, data],
+  //   // }));
+  //   return data;
+  // };
 
   const [selectedChildRepo, setSelectedChildRepo] = useState("");
 
@@ -499,70 +429,39 @@ export default function Chat() {
     // return selectedChildRepo;
   };
 
-  // const [selectedRepoFromContext, setSelectedRepoFromContext] = useContext(SelectedRepoContext)
-
   const [hideList, setHideList] = useState(false);
-
-  // const finalSubmit = async () => {
-  //   new Promise<void>(async (resolve, reject) => {
-  //     try {
-  //       await handleSubmit(`${username}`, `${selectedChildRepo}`, "src/app");
-  //       resolve();
-  //     } catch (error) {
-  //       reject(error);
-  //       console.log(error);
-  //     } finally {
-  //       new Promise<void>(async (resolve, reject) => {
-  //         await fetchContent(`${username}`, `${selectedRepo}`);
-  //       });
-  //       resolve();
-  //       await sendData;
-  //     }
-  //   });
-  // };
+  const [chatSlug, setChatSlug] = useState("");
 
   const handleSubmit = async () => {
     try {
       setHideList(true);
-      await fetchItemPaths(`${username}`, `${selectedChildRepo}`, "src/app");
-      await fetchContent(`${username}`, `${selectedChildRepo}`);
-      await decodeContent();
-      await sendData();
+      if (clickCount === 0) {
+        await fetchItemPaths(`${username}`, `${selectedChildRepo}`, "src/app");
+        await fetchContent(`${username}`, `${selectedChildRepo}`);
+        await decodeContent();
+        await sendData();
+      } else {
+        await handleInputSubmit();
+      }
     } catch (error) {
       console.error("Error during first submit:", error);
+    } finally {
+      if (clickCount === 0) {
+        createChat("test", messages.ai[0]).then((data) =>
+          setChatSlug(data?.slug!)
+        );
+        setClickCount((prevCount) => prevCount + 1);
+      } else {
+        UpdateChat(userInput, currentOutput, chatSlug);
+      }
     }
   };
 
-  // const handleSubmit = async () => {
-  //   // setClickCount((prevCount) => prevCount + 1);
-  //   // if (clickCount === 0) {
-  //   try {
-  //     setHideList(true);
-  //     await fetchItemPaths(`${username}`, `${selectedChildRepo}`, "src/app");
-  //     await fetchContent(`${username}`, `${selectedChildRepo}`);
-  //     await sendData();
-  //     // setHideList(true);
-  //     // await fetchItemPaths(`${username}`, `${selectedChildRepo}`, "src/app")
-  //     //   .then(async () => {
-  //     //     await fetchContent(`${username}`, `${selectedChildRepo}`);
-  //     //   })
-  //     //   .then(async () => {
-  //     //     await sendData();
-  //     //   });
-  //   } catch (error) {
-  //     console.error("Error during first submit:", error);
-  //   }
+  useEffect(() => {
+    console.log("messages:", messages);
+  }, [messages]);
 
-  //   // if (clickCount === 1) {
-  //   //   try {
-  //   //     await sendData();
-  //   //   } catch (error) {
-  //   //     console.error("Error during second submit:", error);
-  //   //   }
-  //   // } else {
-  //   //   await handleInputSubmit();
-  //   // }
-  // };
+  const messagesFromDb = dbMessages;
 
   return (
     <>
@@ -583,13 +482,17 @@ export default function Chat() {
           >
             Submit
           </button>
-          <input
-            className="w-80 my-8 text-black"
+          <textarea
+            className="w-96 h-36 my-8 text-black"
             // value={messages.user}
-            type="text"
-            onChange={(e) => setInput(e.target.value)}
+
+            // type="text"
+            onChange={(e) => setUserInput(e.target.value)}
           />
           <p>Current output: {lastOutput}</p>
+          <div className="text-white bg-blue-1 py-16 px-32 my-8">
+            <p>dbMessages: {dbMessages.userReq}</p>
+          </div>
         </div>
       </div>
     </>

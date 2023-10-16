@@ -28,12 +28,12 @@ const NavBar = () => {
   //   <nav className="flex justify-center align-center w-full h-16 bg-gray-500">
   //     <div className="max-w-7xl mx-auto">
   //       <ul className="flex flex-row gap-4 space-between text-red-100">
-  //         {!sessionStatus && (
-  //           <li>
-  //             <Link href="/signin">signin</Link>
-  //           </li>
-  //         )}
-  //         {sessionStatus && <p>Signed in</p>}
+  // {!sessionStatus && (
+  //   <li>
+  //     <Link href="/signin">signin</Link>
+  //   </li>
+  // )}
+  // {sessionStatus && <p>Signed in</p>}
   //         <li>
   //           <Link href="/register">register</Link>
   //         </li>
@@ -61,7 +61,8 @@ const NavBar = () => {
           </div>
           {/* Secondary Nav */}
           <div className="hidden md:flex space-x-6 items-center">
-            <div>Sign In</div>
+            {!sessionStatus && <div>Sign In</div>}
+            {sessionStatus && <p>Signed in</p>}
             <div className="text-blue-3 font-semibold">Register</div>
           </div>
           {/* Mobile menu button */}

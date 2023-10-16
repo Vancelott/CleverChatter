@@ -49,7 +49,7 @@ export const RepoList = ({
   return (
     <SelectedRepoContext.Provider value={selectedRepo}>
       <nav
-        className="h-full max-w-lg overflow-y-auto border-2 border-white rounded-xl"
+        className="h-full overflow-y-auto border-2 border-white rounded-xl"
         aria-label="Directory"
       >
         <ul

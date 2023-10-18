@@ -81,6 +81,7 @@ model Chat {
     updatedAt DateTime  @updatedAt
     published Boolean   @default(false)
     title     String
+    repository String
     userId    String   @db.ObjectId
     messages  Message[] 
 

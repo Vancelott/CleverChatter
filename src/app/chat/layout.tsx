@@ -6,6 +6,7 @@ import Chat from "./page";
 import createChat from "../actions/createChat";
 import GetMessages from "../actions/getMessages";
 import ChatNav from "./components/chatNav";
+import Messages from "./components/messages";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -25,15 +26,17 @@ export default async function ChatLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const messages = await GetMessages("1234");
+  // const messages = await GetMessages("1234");
 
-  console.log(messages);
+  // console.log(messages);
 
   return (
-    <div>
+    <div className="">
       <ChatNav />
-      <Chat dbMessages={messages!} />
-      {/* {children} */}
+      <div className="flex">
+        {/* <Chat dbMessages={messages!} /> */}
+        {children}
+      </div>
     </div>
   );
 }

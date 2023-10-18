@@ -26,7 +26,7 @@ const UpdateChat = async (
       },
     });
 
-    console.log(updatedMessages);
+    // console.log(updatedMessages);
     return updatedMessages;
   } catch (error: any) {
     return null;

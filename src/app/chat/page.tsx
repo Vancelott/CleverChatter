@@ -9,7 +9,6 @@ import GetUsername from "../actions/getUsername";
 import axios from "axios";
 import toast from "react-hot-toast";
 import { HfInference } from "@huggingface/inference";
-import SendCodeData from "../actions/sendCodeData";
 import repoList, { RepoList, SelectedRepoContext } from "./components/repoList";
 import { RepoContent, ContentData, Repository } from "../types";
 import createChat from "../actions/createChat";
@@ -335,6 +334,8 @@ export default function Chat({ dbMessages }: { dbMessages: MessageState2 }) {
     //     console.log(output);
     //   }
     // }
+
+    return currentOutput;
   };
 
   const handleInputSubmit = async () => {
@@ -405,22 +406,6 @@ export default function Chat({ dbMessages }: { dbMessages: MessageState2 }) {
     </div>
   ));
 
-  // const sendCode = async () => {
-  //   const response = await axios.post("/api/prompt", {
-  //     prompt: input,
-  //   });
-  //   const data = await response.data;
-  //   console.log(data);
-
-  //   const test = `${data}`;
-  //   setLastOutput((prevState) => [...prevState, test]);
-  //   // setMessages((prev) => ({
-  //   //   ...prev,
-  //   //   ai: [...prev.ai, data],
-  //   // }));
-  //   return data;
-  // };
-
   const [selectedChildRepo, setSelectedChildRepo] = useState("");
 
   const getSelectedRepo = (name: string) => {
@@ -431,6 +416,29 @@ export default function Chat({ dbMessages }: { dbMessages: MessageState2 }) {
 
   const [hideList, setHideList] = useState(false);
   const [chatSlug, setChatSlug] = useState("");
+
+  useEffect(() => {
+    console.log(messages);
+  }, [messages]);
+
+  // useEffect(() => {
+  //   console.log(currentOutput);
+  //   UpdateChat(userInput, currentOutput, chatSlug);
+  // }, [chatSlug, currentOutput, userInput]);
+
+  useEffect(() => {
+    if (
+      clickCount === 0 &&
+      currentOutput.length > 1 &&
+      selectedChildRepo.length > 1
+    ) {
+      console.log("Starting create chat");
+
+      createChat("test", currentOutput, selectedChildRepo).then((data) =>
+        setChatSlug(data?.slug!)
+      );
+    }
+  }, [currentOutput, clickCount, selectedChildRepo]);
 
   const handleSubmit = async () => {
     try {
@@ -444,29 +452,20 @@ export default function Chat({ dbMessages }: { dbMessages: MessageState2 }) {
         await handleInputSubmit();
       }
     } catch (error) {
-      console.error("Error during first submit:", error);
+      console.log("Error during first submit:", error);
     } finally {
-      if (clickCount === 0) {
-        createChat("test", messages.ai[0]).then((data) =>
-          setChatSlug(data?.slug!)
-        );
-        setClickCount((prevCount) => prevCount + 1);
-      } else {
+      if (clickCount !== 0) {
         UpdateChat(userInput, currentOutput, chatSlug);
       }
     }
   };
-
-  useEffect(() => {
-    console.log("messages:", messages);
-  }, [messages]);
 
   const messagesFromDb = dbMessages;
 
   return (
     <>
       {/* <div className="bg-gradient-to-b from-blue-0 to-blue-1"> */}
-      <div className="bg-blue-0 h-full">
+      <div className="bg-blue-0 h-screen w-full relative z-10">
         <div className="flex flex-col max-w-3xl mx-auto justify-center items-center py-32">
           <p className="font-bold text-5xl pb-4">Your repositories</p>
           <p className="font-extralight text-xl pb-4">
@@ -482,17 +481,23 @@ export default function Chat({ dbMessages }: { dbMessages: MessageState2 }) {
           >
             Submit
           </button>
-          <textarea
-            className="w-96 h-36 my-8 text-black"
-            // value={messages.user}
+          {hideList && (
+            <textarea
+              className="w-96 h-36 my-8 text-black"
+              // value={messages.user}
 
-            // type="text"
-            onChange={(e) => setUserInput(e.target.value)}
-          />
-          <p>Current output: {lastOutput}</p>
-          <div className="text-white bg-blue-1 py-16 px-32 my-8">
+              // type="text"
+              onChange={(e) => setUserInput(e.target.value)}
+            />
+          )}
+          {hideList && (
+            <p className="py-6 px-8 bg-blue-3 rounded-2xl">
+              Current output: {lastOutput}
+            </p>
+          )}
+          {/* <div className="text-white bg-blue-1 py-16 px-32 my-8">
             <p>dbMessages: {dbMessages.userReq}</p>
-          </div>
+          </div> */}
         </div>
       </div>
     </>

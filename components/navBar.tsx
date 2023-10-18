@@ -52,7 +52,7 @@ const NavBar = () => {
           </div>
           {/* Primary Nav/ Logo */}
           <div className="flex space-x-6 items-center">
-            <div className="mr-2 text-blue-2 font-bold text-xl">Logo</div>
+            <div className=" text-blue-2 sm:mr-4 font-bold text-xl">Logo</div>
             <div className="hidden md:flex items-center space-x-6">
               <div>Home</div>
               <div>Pricing</div>

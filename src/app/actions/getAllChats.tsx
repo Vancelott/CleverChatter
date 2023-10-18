@@ -1,3 +1,5 @@
+"use server";
+
 import { prisma } from "../libs/prismadb";
 import getCurrentUser from "./getCurrentUser";
 
@@ -16,9 +18,10 @@ const GetAllChats = async () => {
           equals: currentUser.id,
         },
       },
+      take: 10,
     });
 
-    console.log(allChats);
+    // console.log(allChats);
     return allChats;
   } catch (error: any) {
     return null;

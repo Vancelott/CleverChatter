@@ -1,4 +1,5 @@
 "use client";
+import "src/app/globals.css";
 
 import Image from "next/image";
 
@@ -24,8 +25,8 @@ export const Landing = () => {
         <svg viewBox="0 0 1000 1000" xmlns="http://www.w3.org/2000/svg">
           <defs>
             <linearGradient id="b" gradientTransform="rotate(-45 .5 .5)">
-              <stop offset="0%" stop-color="#16425B" />
-              <stop offset="100%" stop-color="#81C3D7" />
+              <stop offset="0%" stopColor="#16425B" />
+              <stop offset="100%" stopColor="#81C3D7" />
             </linearGradient>
             <clipPath id="a">
               <path
@@ -34,7 +35,7 @@ export const Landing = () => {
               />
             </clipPath>
           </defs>
-          <g clip-path="url(#a)">
+          <g clipPath="url(#a)">
             <path
               fill="url(#b)"
               d="M802 617q-68 117-185 228t-276.5 42.5q-159.5-68.5-168-228t23-296q31.5-136.5 168-160t238 35q101.5 58.5 185 160T802 617Z"

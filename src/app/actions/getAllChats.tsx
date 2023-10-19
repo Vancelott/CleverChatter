@@ -18,7 +18,7 @@ const GetAllChats = async () => {
           equals: currentUser.id,
         },
       },
-      take: 10,
+      take: 20,
     });
 
     // console.log(allChats);

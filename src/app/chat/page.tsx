@@ -354,7 +354,10 @@ export default function Chat({ dbMessages }: { dbMessages: MessageState2 }) {
           //   clickCount === 1
           //     ? `Here are my answers, let me know how I can improve them: ${userInput}`
           //     : `${userInput}`,
-          inputs: `Here are my answers, let me know how I can improve them: ${userInput}`,
+          inputs:
+            clickCount === 1
+              ? `Here are my answers, let me know how I can improve them: ${userInput}`
+              : `${userInput}`,
           parameters: {
             max_new_tokens: 1024,
             return_full_text: false,
@@ -434,8 +437,10 @@ export default function Chat({ dbMessages }: { dbMessages: MessageState2 }) {
     ) {
       console.log("Starting create chat");
 
-      createChat("test", currentOutput, selectedChildRepo).then((data) =>
-        setChatSlug(data?.slug!)
+      createChat("test", currentOutput, selectedChildRepo).then(
+        (data) => (
+          setChatSlug(data?.slug!), setClickCount((prevCount) => prevCount + 1)
+        )
       );
     }
   }, [currentOutput, clickCount, selectedChildRepo]);

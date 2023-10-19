@@ -17,12 +17,12 @@ export default async function SlugLayout({
 }) {
   const slug = searchParams?.slug;
 
-  const fetchMessages = await GetMessages(slug);
+  // const fetchMessages = await GetMessages(slug);
 
   return (
-    <div className="h-full w-full">
-      {/* {children}  */}
-      <Slug messages={fetchMessages} />
+    <div className="h-full w-full px-52">
+      {children}
+      {/* <Slug messages={fetchMessages} /> */}
     </div>
   );
 }

@@ -61,19 +61,27 @@ const CreateChat = async (
       },
     });
 
-    const newMessage = await prisma.message.create({
+    const newMessage = await prisma.conversation.create({
       data: {
         slug: generatedSlug,
-        userReq: [userInput],
-        aiRes: [aiOutput],
+        UserMessages: {
+          create: {
+            messageContent: userInput,
+          },
+        },
+        AiMessages: {
+          create: {
+            messageContent: aiOutput,
+          },
+        },
         chat: {
           connect: { id: newChat.id },
         },
       },
     });
 
-    console.log(newChat);
-    console.log(newMessage);
+    // console.log(newChat);
+    // console.log(newMessage);
     return newChat;
   } catch (error: any) {
     console.log("createChat error:", error);

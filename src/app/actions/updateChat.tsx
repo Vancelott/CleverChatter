@@ -12,22 +12,25 @@ const UpdateChat = async (
       console.log("Missing chat slug in updateChat.");
     }
 
-    const updatedMessages = await prisma.message.update({
-      where: {
-        slug: chatSlug,
-      },
+    const userMessage = await prisma.userMessages.create({
       data: {
-        userReq: {
-          push: userInput,
-        },
-        aiRes: {
-          push: aiOutput,
+        messageContent: userInput,
+        conversation: {
+          connect: { slug: chatSlug },
         },
       },
     });
 
-    // console.log(updatedMessages);
-    return updatedMessages;
+    const aiMessage = await prisma.aiMessages.create({
+      data: {
+        messageContent: aiOutput,
+        conversation: {
+          connect: { slug: chatSlug },
+        },
+      },
+    });
+
+    return [userMessage, aiMessage];
   } catch (error: any) {
     return null;
   }

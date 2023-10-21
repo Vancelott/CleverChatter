@@ -15,7 +15,7 @@ const GetMessages = async (chatSlug: string) => {
     },
   });
 
-  console.log(messages);
+  // console.log(messages);
   return messages;
 };
 

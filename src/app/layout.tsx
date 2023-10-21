@@ -22,9 +22,9 @@ export default async function RootLayout({
     <html lang="en">
       <AuthContext>
         <body>
-          <NavBar />
           <div className="flex flex-col h-screen justify-between">
             <Toaster />
+            {/* <NavBar /> */}
             {children}
           </div>
         </body>

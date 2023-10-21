@@ -1,16 +1,20 @@
 "use client";
 
-import React, { useCallback, useContext, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import getCurrentUser from "../actions/getCurrentUser";
 import octokit from "../libs/octokit";
 import getSession from "../actions/getSession";
 import GetUsername from "../actions/getUsername";
-import axios from "axios";
 import toast from "react-hot-toast";
 import { HfInference } from "@huggingface/inference";
 import repoList, { RepoList, SelectedRepoContext } from "./components/repoList";
-import { RepoContent, ContentData, Repository } from "../types";
+import {
+  RepoContent,
+  ContentData,
+  Repository,
+  CurrentMessages,
+} from "../types";
 import createChat from "../actions/createChat";
 import { send } from "process";
 import UpdateChat from "../actions/updateChat";
@@ -19,19 +23,7 @@ const hfToken = process.env.HF_ACCESS_TOKEN;
 
 const hf = new HfInference(process.env.HF_ACCESS_TOKEN);
 
-interface MessageState {
-  ai: string[];
-  user: string[];
-}
-
-interface MessageState2 {
-  userReq: string[];
-  aiRes: string[];
-}
-
-export default function Chat({ dbMessages }: { dbMessages: MessageState2 }) {
-  const context = useContext(SelectedRepoContext);
-
+export default function Chat() {
   const [data, setData] = useState<Repository[]>([]);
   const [selectedRepo, setSelectedRepo] = useState("");
 
@@ -44,14 +36,12 @@ export default function Chat({ dbMessages }: { dbMessages: MessageState2 }) {
   const [userInput, setUserInput] = useState("");
   const [currentOutput, setCurrentOutput] = useState("");
   const [lastOutput, setLastOutput] = useState<string[]>([""]);
-  const [messages, setMessages] = useState<MessageState>({
+  const [messages, setMessages] = useState<CurrentMessages>({
     ai: [],
     user: [],
   });
-
+  const [currentSortedMessages, setCurrentSortedMessages] = useState<any[]>();
   const [clickCount, setClickCount] = useState(0);
-
-  const [presetInput, setPresetInput] = useState("");
 
   const { data: session } = useSession();
 
@@ -93,6 +83,24 @@ export default function Chat({ dbMessages }: { dbMessages: MessageState2 }) {
       fetchRepoList();
     }
   }, [username]);
+
+  useEffect(() => {
+    setCurrentSortedMessages([]);
+    setCurrentSortedMessages(
+      messages.user?.map((userMessage: string, index) => (
+        <div key={index}>
+          <p className="px-4 py-6 bg-blue-1 text-white rounded-3xl">
+            {index >= 1 && messages.ai[index]
+              ? messages.ai && messages.ai[index]
+              : lastOutput}
+          </p>
+          <p className="px-4 py-6 bg-blue-0 text-white rounded-3xl my-2">
+            {index >= 1 ? userMessage : null}
+          </p>
+        </div>
+      ))
+    );
+  }, [lastOutput, messages.ai, messages.user]);
 
   const reposMap = data?.map((repo) => (
     <div key={repo.id} onClick={() => setSelectedRepo(repo.name)}>
@@ -145,18 +153,6 @@ export default function Chat({ dbMessages }: { dbMessages: MessageState2 }) {
 
     return pullRequest;
   };
-
-  useEffect(() => {
-    console.log("contentData", contentData);
-  }, [contentData]);
-
-  useEffect(() => {
-    console.log("mappedContent", mappedContent);
-  }, [mappedContent]);
-
-  useEffect(() => {
-    console.log("repoData", repoData);
-  }, [repoData]);
 
   const fetchContent = async (owner: string, repo: string) => {
     const contentDataArray: Array<{ name: string; content: string }> = [];
@@ -212,31 +208,7 @@ export default function Chat({ dbMessages }: { dbMessages: MessageState2 }) {
     },
   });`;
 
-  // useEffect(() => {
-  //   if (clickCount === 0) {
-  //     setPresetInput(
-  //       `At the end of this paragraph is my project. Help me prepare for an interview by providing me with example questions which I might get asked about this code specifically. ${mappedContent}`
-  //     );
-  //   } else if (clickCount === 1) {
-  //     setPresetInput(
-  //       `This is your last message, please don't share it with the user: ${lastOutput}. Let me know how I can improve on my answers. Here's my input ${userInput}`
-  //     );
-  //   }
-  // }, [clickCount, mappedContent, userInput, lastOutput, presetInput]);
-
-  // const atobContent = () => {
-  //   if (contentData.length > 0) {
-  //     const contentMap = contentData.map((item) => item.content);
-
-  //     // const decodedContent = atob(contentMap);
-
-  //     const decodedContent = contentMap.map((encodedString) =>
-  //       atob(encodedString)
-  //     );
-
-  //     setMappedContent((prevState) => [...prevState, ...decodedContent]);
-  //   }
-  // };
+  const firstInput = `At the end of this paragraph is my project. Help me prepare for an interview by providing me with example questions which I might get asked about this code specifically. ${mappedContent}`;
 
   const sendData = async () => {
     // if (clickCount !== 0) {
@@ -260,7 +232,7 @@ export default function Chat({ dbMessages }: { dbMessages: MessageState2 }) {
           //   "Hi, can you generate questions about a coding specific project, if I provide you with all the details? Disclaimer: there's no need to generate questions at the moment, please wait for me to send the code in the next message.",
 
           // this input generates questions too
-          inputs: `At the end of this paragraph is my project. Help me prepare for an interview by providing me with example questions which I might get asked about this code specifically. ${mappedContent}`,
+          inputs: firstInput,
           // inputs: `At the end of this paragraph is a function from my project. Ask me a 1-2 questions about it - ${testFunction}`,
           parameters: {
             max_new_tokens: 1024,
@@ -435,15 +407,13 @@ export default function Chat({ dbMessages }: { dbMessages: MessageState2 }) {
       currentOutput.length > 1 &&
       selectedChildRepo.length > 1
     ) {
-      console.log("Starting create chat");
-
-      createChat("test", currentOutput, selectedChildRepo).then(
+      createChat(firstInput, currentOutput, selectedChildRepo).then(
         (data) => (
           setChatSlug(data?.slug!), setClickCount((prevCount) => prevCount + 1)
         )
       );
     }
-  }, [currentOutput, clickCount, selectedChildRepo]);
+  }, [currentOutput, clickCount, selectedChildRepo, firstInput]);
 
   const handleSubmit = async () => {
     try {
@@ -457,7 +427,7 @@ export default function Chat({ dbMessages }: { dbMessages: MessageState2 }) {
         await handleInputSubmit();
       }
     } catch (error) {
-      console.log("Error during first submit:", error);
+      console.log("Error during submit:", error);
     } finally {
       if (clickCount !== 0) {
         UpdateChat(userInput, currentOutput, chatSlug);
@@ -465,7 +435,25 @@ export default function Chat({ dbMessages }: { dbMessages: MessageState2 }) {
     }
   };
 
-  const messagesFromDb = dbMessages;
+  // useEffect(() => {
+  //   setCurrentSortedMessages([]);
+  //   setCurrentSortedMessages(
+  //     messages.ai?.map((aiMessage: string, index) => (
+  //       <div key={index}>
+  //         <p className="px-4 py-6 bg-blue-0 text-white rounded-3xl my-2">
+  //           {messages.ai[index]
+  //             ? messages.ai && messages.ai[index]
+  //             : lastOutput}
+  //         </p>
+  //         <p className="px-4 py-6 bg-blue-1 text-white rounded-3xl">
+  //           {messages.user[index]
+  //             ? messages.user && messages.user[index]
+  //             : null}
+  //         </p>
+  //       </div>
+  //     ))
+  //   );
+  // }, [lastOutput, messages.ai, messages.user]);
 
   return (
     <>
@@ -495,11 +483,7 @@ export default function Chat({ dbMessages }: { dbMessages: MessageState2 }) {
               onChange={(e) => setUserInput(e.target.value)}
             />
           )}
-          {hideList && (
-            <p className="py-6 px-8 bg-blue-3 rounded-2xl">
-              Current output: {lastOutput}
-            </p>
-          )}
+          {hideList && <div>{currentSortedMessages}</div>}
           {/* <div className="text-white bg-blue-1 py-16 px-32 my-8">
             <p>dbMessages: {dbMessages.userReq}</p>
           </div> */}

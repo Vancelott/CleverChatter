@@ -43,7 +43,7 @@ const NavBar = () => {
   // );
 
   return (
-    <nav className="bg-gray-900">
+    <nav className="bg-gray-900 z-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <div className="flex justify-between py-5 px-3">
           {/* Burger menu */}

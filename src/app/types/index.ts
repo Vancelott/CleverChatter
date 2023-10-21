@@ -123,3 +123,15 @@ export interface Repository {
   watchers_count: number;
   web_commit_signoff_required: boolean;
 }
+
+export interface MessagesData {
+  id: string;
+  messageId: string;
+  messageContent: string;
+  createdAt: Date;
+}
+
+export interface CurrentMessages {
+  ai: string[];
+  user: string[];
+}

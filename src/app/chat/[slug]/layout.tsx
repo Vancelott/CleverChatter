@@ -20,7 +20,7 @@ export default async function SlugLayout({
   // const fetchMessages = await GetMessages(slug);
 
   return (
-    <div className="h-full w-full px-52">
+    <div className="h-full w-full px-52 py-12">
       {children}
       {/* <Slug messages={fetchMessages} /> */}
     </div>

@@ -71,7 +71,7 @@ export const ChatNav = () => {
           hidden === true ? setHidden(false) : setHidden(true);
         }}
         // onClick={() => setHidden(false)}
-        className="md:hidden flex items-center relative"
+        className="md:hidden flex items-center static"
       >
         {`>`}
       </button>
@@ -80,7 +80,7 @@ export const ChatNav = () => {
         className={
           hidden
             ? `hidden`
-            : `flex-1 flex flex-col h-full bg-gray-800 max-w-sm z-40 absolute transition-opacity duration-1000 delay-500`
+            : `flex-1 flex flex-col min-h-screen bg-gray-800 max-w-sm z-40 absolute transition-opacity duration-1000 delay-500`
         }
       >
         <div className="flex-1 flex flex-col pt-5 pb-4 overflow-y-auto">

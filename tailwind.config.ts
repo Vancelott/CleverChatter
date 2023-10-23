@@ -15,12 +15,17 @@ const config: Config = {
           "conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))",
       },
       colors: {
+        // I added blue-00 at a later stage, otherwise it would've followed the naming pattern
+        "blue-00": "#081821",
         "blue-0": "#16425B",
         "blue-1": "#2F6690",
         "blue-2": "#3A7CA5",
         "blue-3": "#81C3D7",
         "white-0": "#D9DCD6",
       },
+    },
+    fontFamily: {
+      sans: ["Montserrat)"],
     },
   },
   plugins: [],

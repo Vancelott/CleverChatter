@@ -9,7 +9,7 @@ import NavBar from "../../components/navBar";
 export default function Home() {
   return (
     <>
-      <div className="">
+      <div className="bg-blue-00">
         <NavBar />
         <Landing />
       </div>

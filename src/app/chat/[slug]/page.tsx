@@ -95,11 +95,11 @@ export default function Slug({ params }: { params: { slug: string } }) {
     setDbSortedMessages(
       userMessages?.map(
         (userMessage: MessagesData, index = +userMessage.id) => (
-          <div key={userMessage.messageId}>
-            <p className="px-4 py-6 bg-blue-0 text-white rounded-3xl my-2">
+          <div key={userMessage.id}>
+            <p className="px-4 py-6 bg-blue-0 text-white rounded-3xl my-2 whitespace-pre-wrap">
               {userMessage.messageContent}
             </p>
-            <p className="px-4 py-6 bg-blue-1 text-white rounded-3xl">
+            <p className="px-4 py-6 bg-blue-1 text-white rounded-3xl whitespace-pre-wrap">
               {/* {aiMessages![index].messageContent} */}
               {aiMessages &&
                 aiMessages[index] &&
@@ -137,16 +137,29 @@ export default function Slug({ params }: { params: { slug: string } }) {
           <div>{dbSortedMessages}</div>
           <div>{currentSortedMessages}</div>
         </div>
-        <textarea
+        <div className="relative flex flex-col">
+          <button
+            onClick={handleSubmit}
+            className="absolute right-0 top-[3.9rem] bg-blue-2 text-white py-2 px-4 rounded-full mr-2 mt-2 z-10"
+          >
+            Submit
+          </button>
+          <textarea
+            rows={4}
+            name="comment"
+            id="comment"
+            placeholder="Send a message"
+            // className="m-0 w-full resize-none border-0 bg-blue-0 py-[10px] pr-10 focus:ring-0 focus-visible:ring-0 dark:bg-transparent md:py-4 md:pr-12 pl-3 md:pl-4"
+
+            className="w-full p-2 shadow-sm focus:ring-blue-3 z-15 resize-none focus:border-blue-3 block text-black sm:text-sm border-gray-300 rounded-md mt-10 overflow-visible"
+            defaultValue={""}
+            onChange={(e) => setUserInput(e.target.value)}
+          />
+          {/* <textarea
           className="w-96 h-36 my-8 text-black"
           onChange={(e) => setUserInput(e.target.value)}
-        />
-        <button
-          onClick={handleSubmit}
-          className="font-semibold text-md px-4 py-2 mt-6 bg-white-0 text-blue-0 rounded-md"
-        >
-          Submit
-        </button>
+        /> */}
+        </div>
       </div>
     </>
   );

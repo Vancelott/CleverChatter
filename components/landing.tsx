@@ -1,15 +1,22 @@
 "use client";
 import "src/app/globals.css";
+import { Montserrat } from "next/font/google";
+
+const montserrat = Montserrat({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-montserrat",
+});
 
 import Image from "next/image";
 
 export const Landing = () => {
   return (
     // <Suspense fallback={<LoadingComponent />}>
-    <div className="pt-[64px] md:pt-0 mx-40">
-      <div className="flex flex-row min-h-screen items-center justify-center bg-light-green">
+    <div className="pt-0 xl:pt-6 xl:px-20">
+      <div className="flex flex-row min-h-screen items-center justify-center overflow-x-hidden">
         {/* <div className="flex flex-col-reverse lg:flex-row-reverse items-center gap-x-8 bg-gray-100 rounded-2xl m-6 md:m-0 p-10"> */}
-        <div className="max-w-md max-h-md flex flex-col items-center justify-center mx-10 my-20 sm:max-w-2xl">
+        <div className="absolute lg:static max-w-md max-h-md flex flex-col items-center justify-center mx-10 my-20 lg:pl-40 sm:max-w-3xl">
           <h2 className="text-4xl sm:text-5xl text-blue-3">
             Lorem ipsum dolor sit amet consectetur adipisicing elit.
           </h2>
@@ -18,11 +25,15 @@ export const Landing = () => {
             animi quod non! Ducimus dolores maiores autem, a laudantium,
             corporis repellendus dolore esse corrupti.
           </h3>
-          <button className="mt-10 bg-blue-0 px-3 py-3 rounded-xl text-blue-3 font-medium text-xl hover:bg-blue-1 transition-bg-color duration-300">
+          <button className="mt-10 bg-blue-2 px-3 py-3 rounded-xl text-white-1 font-medium text-xl hover:bg-blue-1 transition-bg-color duration-300">
             <a href="/chat">Start now</a>
           </button>
         </div>
-        <svg viewBox="0 0 1000 1000" xmlns="http://www.w3.org/2000/svg">
+        <svg
+          viewBox="0 70 1000 1000"
+          className="static min-w-[800px] min-h-[800px] max-w-[1024px] max-h-[1024px]"
+          xmlns="http://www.w3.org/2000/svg"
+        >
           <defs>
             <linearGradient id="b" gradientTransform="rotate(-45 .5 .5)">
               <stop offset="0%" stopColor="#16425B" />

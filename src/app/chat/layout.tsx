@@ -6,7 +6,6 @@ import Chat from "./page";
 import createChat from "../actions/createChat";
 import GetMessages from "../actions/getMessages";
 import ChatNav from "./components/chatNav";
-import Messages from "./components/messages";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -31,9 +30,9 @@ export default async function ChatLayout({
   // console.log(messages);
 
   return (
-    <div className="h-screen">
+    <div className="flex w-full">
       <ChatNav />
-      <div className="flex">
+      <div className="ml-0 lg:ml-[244px] w-full">
         {/* <Chat dbMessages={messages!} /> */}
         {children}
       </div>

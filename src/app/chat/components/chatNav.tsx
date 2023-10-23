@@ -4,6 +4,10 @@ import { fetchChatsAction } from "@/app/actions/actions";
 import GetAllChats from "@/app/actions/getAllChats";
 import { useRouter } from "next/navigation";
 import { startTransition, useCallback, useEffect, useState } from "react";
+import {
+  ChevronDoubleRightIcon,
+  ChevronDoubleLeftIcon,
+} from "@heroicons/react/24/solid";
 // import { useRouter } from "next/navigation";
 
 interface Chats {
@@ -33,16 +37,6 @@ export const ChatNav = () => {
   const [chats, setChats] = useState<any>();
   const [hidden, setHidden] = useState(false);
 
-  // const fetchChats = startTransition(() => {
-  //   fetchChatsAction().then((data) => setChats(data));
-  // });
-
-  // const fetchChats = useCallback(() => {
-  //   try {
-  //     const fetch = fetchChatsAction().then((data) => setChats(data));
-  //   } catch {}
-  // }, []);
-
   useEffect(() => {
     try {
       const fetchChats = GetAllChats().then((data) => setChats(data));
@@ -51,42 +45,44 @@ export const ChatNav = () => {
     }
   }, []);
 
-  // const fetchChats = () => {
-  //   try {
-  //     GetAllChats().then((data) => console.log(data));
-  //     console.log(chats);
-  //   } catch (error) {
-  //     console.error;
-  //   }
-  // };
-
   const handleNewChat = () => {
     router.push(`/chat`, { scroll: false });
   };
 
-  return (
-    <div className="max-w-[11px]">
-      <button
-        onClick={() => {
-          hidden === true ? setHidden(false) : setHidden(true);
-        }}
-        // onClick={() => setHidden(false)}
-        className="md:hidden flex items-center static"
-      >
-        {`>`}
-      </button>
+  // const chatMap =
+  // (chats.length === 0) ? <p>No chats found</p> : (
+  // chats?.map((item: any) => (
+  //   <p
+  //     key={item.id}
+  //     onClick={() => handleClick(item.slug)}
+  //     className="text-gray-300 hover:bg-gray-700 hover:text-white
+  // group flex items-center px-2 py-2 text-sm font-medium rounded-md cursor-pointer"
+  //   >
+  //     {item.title}
+  //   </p>
+  // )));
 
+  return (
+    <div className="">
+      <div className="h-8 w-8 fixed">
+        <button
+          onClick={() => setHidden(!hidden)}
+          className={`lg:hidden px-2 py-1 h-10 w-10 m-3 rounded-full bg-blue-2 ${
+            hidden ? "ml-64" : "ml-3"
+          }`}
+        >
+          {hidden ? <ChevronDoubleLeftIcon /> : <ChevronDoubleRightIcon />}
+        </button>
+      </div>
       <div
-        className={
-          hidden
-            ? `hidden`
-            : `flex-1 flex flex-col min-h-screen bg-gray-800 max-w-sm z-40 absolute transition-opacity duration-1000 delay-500`
-        }
+        className={`${
+          hidden ? "flex" : "hidden lg:flex"
+        } flex-col h-full bg-gray-800 fixed z-40 transition-all duration-1000 delay-500`}
       >
         <div className="flex-1 flex flex-col pt-5 pb-4 overflow-y-auto">
-          <div className="flex items-center flex-shrink-0 px-4">
+          {/* <div className="flex items-center flex-shrink-0 px-4">
             <img className="h-8 w-auto" />
-          </div>
+          </div> */}
           <nav
             className="mt-5 flex-1 px-2 bg-gray-800 space-y-1"
             aria-label="Sidebar"
@@ -98,7 +94,6 @@ export const ChatNav = () => {
             >
               Start new chat
             </button>
-
             {chats?.map((item: any) => (
               <p
                 key={item.id}
@@ -111,7 +106,7 @@ export const ChatNav = () => {
             ))}
           </nav>
         </div>
-        {/* <div className="flex-shrink-0 flex bg-gray-700 p-4">
+        <div className="flex-shrink-0 flex bg-gray-700 p-4">
           <a href="#" className="flex-shrink-0 w-full group block">
             <div className="flex items-center">
               <div>
@@ -129,7 +124,7 @@ export const ChatNav = () => {
               </div>
             </div>
           </a>
-        </div> */}
+        </div>
       </div>
     </div>
   );

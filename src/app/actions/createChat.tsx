@@ -17,7 +17,7 @@ const CreateChat = async (
 
     const currentUser = await getCurrentUser();
 
-    const title = aiOutput.substring(1, 30);
+    const title = aiOutput.substring(1, 35);
 
     const slugifiedTitle = slugify(title, {
       strict: true,
@@ -28,7 +28,7 @@ const CreateChat = async (
       let id = 0;
       let isUnique = false;
 
-      let slug = `${slugifiedTitle}` + `${id}`;
+      let slug = `${slugifiedTitle}-${id}`;
 
       while (!isUnique) {
         const uniqueChat = await prisma.chat.findFirst({
@@ -41,7 +41,7 @@ const CreateChat = async (
           isUnique = true;
         } else {
           id++;
-          slug = `${title}` + `${id}`;
+          slug = `${slugifiedTitle}-${id}`;
         }
       }
 

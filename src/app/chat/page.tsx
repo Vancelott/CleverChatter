@@ -208,15 +208,19 @@ export default function Chat() {
     },
   });`;
 
+  // this variable stores the value of the first prompt without the code
+  const firstUserPrompt = `At the end of this paragraph is my project. Help me prepare for an interview by providing me with example questions which I might get asked about this code specifically.`;
+
+  // this variable stores the first prompt with the content from the github repo
   const firstInput = `At the end of this paragraph is my project. Help me prepare for an interview by providing me with example questions which I might get asked about this code specifically. ${mappedContent}`;
 
   const sendData = async () => {
-    // if (clickCount !== 0) {
-    //   setMessages((prev) => ({
-    //     ...prev,
-    //     user: [...prev.user, userInput],
-    //   }));
-    // }
+    if (clickCount === 0) {
+      setMessages((prev) => ({
+        ...prev,
+        user: [...prev.user, firstUserPrompt],
+      }));
+    }
     try {
       // atobContent();
       setLastOutput([]);
@@ -396,24 +400,20 @@ export default function Chat() {
     console.log(messages);
   }, [messages]);
 
-  // useEffect(() => {
-  //   console.log(currentOutput);
-  //   UpdateChat(userInput, currentOutput, chatSlug);
-  // }, [chatSlug, currentOutput, userInput]);
-
+  // creates chat once the full output from the ai is available
   useEffect(() => {
     if (
       clickCount === 0 &&
       currentOutput.length > 1 &&
       selectedChildRepo.length > 1
     ) {
-      createChat(firstInput, currentOutput, selectedChildRepo).then(
+      createChat(firstUserPrompt, currentOutput, selectedChildRepo).then(
         (data) => (
           setChatSlug(data?.slug!), setClickCount((prevCount) => prevCount + 1)
         )
       );
     }
-  }, [currentOutput, clickCount, selectedChildRepo, firstInput]);
+  }, [currentOutput, clickCount, selectedChildRepo, firstUserPrompt]);
 
   const handleSubmit = async () => {
     try {
@@ -435,25 +435,25 @@ export default function Chat() {
     }
   };
 
-  // useEffect(() => {
-  //   setCurrentSortedMessages([]);
-  //   setCurrentSortedMessages(
-  //     messages.ai?.map((aiMessage: string, index) => (
-  //       <div key={index}>
-  //         <p className="px-4 py-6 bg-blue-0 text-white rounded-3xl my-2">
-  //           {messages.ai[index]
-  //             ? messages.ai && messages.ai[index]
-  //             : lastOutput}
-  //         </p>
-  //         <p className="px-4 py-6 bg-blue-1 text-white rounded-3xl">
-  //           {messages.user[index]
-  //             ? messages.user && messages.user[index]
-  //             : null}
-  //         </p>
-  //       </div>
-  //     ))
-  //   );
-  // }, [lastOutput, messages.ai, messages.user]);
+  useEffect(() => {
+    if (messages.ai.length && messages.user.length > 1) {
+      setCurrentSortedMessages([]);
+      setCurrentSortedMessages(
+        messages.user?.map((userMessage: string, index) => (
+          <div key={index}>
+            <p className="px-4 py-6 bg-blue-0 text-white rounded-3xl my-2">
+              {userMessage}
+            </p>
+            <p className="px-4 py-6 bg-blue-1 text-white rounded-3xl">
+              {messages.ai[index]
+                ? messages.ai && messages.ai[index]
+                : lastOutput}
+            </p>
+          </div>
+        ))
+      );
+    }
+  }, [lastOutput, messages.ai, messages.user]);
 
   return (
     <>
@@ -483,7 +483,7 @@ export default function Chat() {
               onChange={(e) => setUserInput(e.target.value)}
             />
           )}
-          {hideList && <div>{currentSortedMessages}</div>}
+          <div>{currentSortedMessages}</div>
           {/* <div className="text-white bg-blue-1 py-16 px-32 my-8">
             <p>dbMessages: {dbMessages.userReq}</p>
           </div> */}

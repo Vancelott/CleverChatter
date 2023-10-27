@@ -12,25 +12,35 @@ const UpdateChat = async (
       console.log("Missing chat slug in updateChat.");
     }
 
-    const userMessage = await prisma.userMessages.create({
-      data: {
-        messageContent: userInput,
-        conversation: {
-          connect: { slug: chatSlug },
-        },
-      },
-    });
+    if (userInput.length < 0) {
+      console.log("User input is too short to create message entry.");
+    }
 
-    const aiMessage = await prisma.aiMessages.create({
-      data: {
-        messageContent: aiOutput,
-        conversation: {
-          connect: { slug: chatSlug },
-        },
-      },
-    });
+    if (aiOutput.length < 0) {
+      console.log("Ai output is too short to create message entry.");
+    }
 
-    return [userMessage, aiMessage];
+    if (aiOutput.length > 0 && userInput.length > 0) {
+      const userMessage = await prisma.userMessages.create({
+        data: {
+          messageContent: userInput,
+          conversation: {
+            connect: { slug: chatSlug },
+          },
+        },
+      });
+
+      const aiMessage = await prisma.aiMessages.create({
+        data: {
+          messageContent: aiOutput,
+          conversation: {
+            connect: { slug: chatSlug },
+          },
+        },
+      });
+
+      return [userMessage, aiMessage];
+    }
   } catch (error: any) {
     return null;
   }

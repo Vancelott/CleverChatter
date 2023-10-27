@@ -30,8 +30,10 @@ const NavBar = () => {
           </div>
           {/* Primary Nav/ Logo */}
           <div className="flex space-x-6 items-center">
-            <div className=" text-blue-2 sm:mr-4 font-bold text-xl">Logo</div>
-            <div className="text-white hidden md:flex items-center space-x-6 text-lg font-semibold cursor-pointer">
+            <div className=" text-blue-2 sm:mr-4 font-bold text-xl">
+              CleverChatter
+            </div>
+            <div className="text-white hidden md:flex items-center space-x-6 text-md font-semibold cursor-pointer">
               <div className="hover:text-blue-3">Home</div>
               <div className="hover:text-blue-3">Pricing</div>
               <div className="hover:text-blue-3">Contact us</div>

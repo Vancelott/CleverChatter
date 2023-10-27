@@ -1,16 +1,21 @@
 "use client";
 
 import GetMessages from "@/app/actions/getMessages";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { HfInference } from "@huggingface/inference";
 import UpdateChat from "@/app/actions/updateChat";
 import { MessagesData, CurrentMessages } from "../../types";
+import GetTotalMessages from "@/app/actions/getTotalMessages";
+import { useInView } from "react-intersection-observer";
+import toast, { Toaster } from "react-hot-toast";
 
 const hfToken = process.env.HF_ACCESS_TOKEN;
 
 const hf = new HfInference(process.env.HF_ACCESS_TOKEN);
 
 export default function Slug({ params }: { params: { slug: string } }) {
+  const { ref: myRef, inView: entryVisibility, entry } = useInView();
+
   const [chatSlug] = useState(params.slug);
   const [userMessages, setUserMessages] = useState<MessagesData[]>();
   const [aiMessages, setAiMessages] = useState<MessagesData[]>();
@@ -18,20 +23,28 @@ export default function Slug({ params }: { params: { slug: string } }) {
   const [userInput, setUserInput] = useState("");
   const [currentOutput, setCurrentOutput] = useState("");
   const [lastOutput, setLastOutput] = useState<string[]>([""]);
+  const [submit, setSubmit] = useState(false);
 
   const [messages, setMessages] = useState<CurrentMessages>({
     ai: [],
     user: [],
   });
 
+  const [page, setPage] = useState(1);
+  const [totalMessages, setTotalMessages] = useState<number>(0);
+
   const [dbSortedMessages, setDbSortedMessages] = useState<any[]>();
   const [currentSortedMessages, setCurrentSortedMessages] = useState<any[]>();
 
+  const pageSize = 3;
+  const totalPages = Math.ceil(totalMessages! / 2 / pageSize);
+  const maxPage = Math.min(totalPages, Math.max(page + 5, 10));
+
   useEffect(() => {
-    GetMessages(chatSlug).then((data) => {
-      setUserMessages(data?.UserMessages), setAiMessages(data?.AiMessages);
+    GetTotalMessages(chatSlug).then((data) => {
+      setTotalMessages(data);
     });
-  }, [chatSlug]);
+  }, [chatSlug, page, totalPages]);
 
   const handleInputSubmit = async () => {
     setMessages((prev) => ({
@@ -80,66 +93,165 @@ export default function Slug({ params }: { params: { slug: string } }) {
   };
 
   const handleSubmit = async () => {
-    try {
-      await handleInputSubmit();
-    } catch (error) {
-      console.log("Error during submit:", error);
-    } finally {
-      UpdateChat(userInput, currentOutput, chatSlug);
+    if (userInput.length > 0) {
+      setSubmit(true);
+      try {
+        await handleInputSubmit();
+      } catch (error) {
+        console.log("Error during submit:", error);
+      } finally {
+        UpdateChat(userInput, currentOutput, chatSlug);
+        setSubmit(false);
+      }
+    } else {
+      toast.error("Please type in a message.");
     }
   };
 
-  // sorts all of the available messages from the database by using the userMessage.id as index
   useEffect(() => {
-    setDbSortedMessages([]);
-    setDbSortedMessages(
-      userMessages?.map(
-        (userMessage: MessagesData, index = +userMessage.id) => (
-          <div key={userMessage.id}>
-            <p className="px-4 py-6 bg-blue-0 text-white rounded-3xl my-2 whitespace-pre-wrap">
-              {userMessage.messageContent}
-            </p>
-            <p className="px-4 py-6 bg-blue-1 text-white rounded-3xl whitespace-pre-wrap">
-              {/* {aiMessages![index].messageContent} */}
-              {aiMessages &&
-                aiMessages[index] &&
-                aiMessages[index].messageContent}
-            </p>
-          </div>
-        )
+    const mergedUserMessages = userMessages ?? [];
+    const mergedAiMessages = aiMessages ?? [];
+
+    // Merge the two arrays
+    const allMessages: MessagesData[] = [
+      ...mergedUserMessages,
+      ...mergedAiMessages,
+    ];
+
+    const sortedMessages = allMessages.sort((a, b) => {
+      return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+    });
+
+    const renderedMessages = sortedMessages.map(
+      (message, index = +message.id) => (
+        <div key={message.id}>
+          <p
+            className={`px-4 py-6 text-white rounded-3xl my-2 whitespace-pre-wrap ${
+              index % 2 ? "bg-blue-0" : "bg-blue-1"
+            }`}
+          >
+            {message.messageContent} - {`${message.createdAt}`}
+          </p>
+        </div>
       )
     );
-  }, [aiMessages, userMessages]);
+
+    // Render the sorted and mapped messages
+    setDbSortedMessages((prev) => [prev, renderedMessages]);
+  }, [userMessages, aiMessages]);
 
   // sorts all of the messagse typed after getting the currently available messages in the database
   useEffect(() => {
-    setCurrentSortedMessages([]);
-    setCurrentSortedMessages(
-      messages.user?.map((userMessage: string, index) => (
-        <div key={index}>
-          <p className="px-4 py-6 bg-blue-0 text-white rounded-3xl my-2">
-            {userMessage}
-          </p>
-          <p className="px-4 py-6 bg-blue-1 text-white rounded-3xl">
-            {messages.ai[index]
-              ? messages.ai && messages.ai[index]
-              : lastOutput}
-          </p>
-        </div>
-      ))
-    );
+    if (messages.ai.length && messages.user.length > 1) {
+      setCurrentSortedMessages([]);
+      setCurrentSortedMessages(
+        messages.user?.map((userMessage: string, index) => (
+          <div key={index}>
+            <p className="px-4 py-6 bg-blue-0 text-white rounded-3xl my-2">
+              {userMessage}
+            </p>
+            <p className="px-4 py-6 bg-blue-1 text-white rounded-3xl">
+              {messages.ai[index]
+                ? messages.ai && messages.ai[index]
+                : lastOutput}
+            </p>
+          </div>
+        ))
+      );
+    }
   }, [lastOutput, messages.ai, messages.user]);
+
+  useEffect(() => {
+    console.log("page:", page);
+    console.log("totalPages:", totalPages);
+  }, [page, totalPages]);
+
+  // useEffect(() => {
+  //   const observer = new IntersectionObserver((entries) => {
+  //     const entry = entries[0];
+  //     setEntryVisibility(entry.isIntersecting);
+  //     if (entryVisibility === true && page <= maxPage) {
+  //       setTimeout(() => {
+  //         GetMessages(chatSlug, page).then((data) => {
+  //           // setUserMessages((prev) => [data?.UserMessages, ...prev]);
+  //           setUserMessages((prev: MessagesData[] | undefined) => [
+  //             ...data!.UserMessages,
+  //             ...(prev || []),
+  //           ]),
+  //             setAiMessages((prev: MessagesData[] | undefined) => [
+  //               ...data!.AiMessages,
+  //               ...(prev || []),
+  //             ]);
+  //           setPage((prev) => prev + 1);
+  //         });
+  //       }, 2000);
+  //       // console.log("entry:", entry);
+  //     }
+  //   });
+  //   observer.observe(myRef.current!);
+  //   console.log("entryvisibility:", entryVisibility);
+
+  //   console.log("page:", page);
+  // }, [chatSlug, entryVisibility, page, maxPage]);
+
+  useEffect(() => {
+    // if (page && page === 1) {
+    //   window.scrollTo({
+    //     top: document.documentElement.scrollHeight,
+    //     behavior: "smooth",
+    //   });
+    //   setPage((prev) => prev + 1);
+    // }
+    if (entryVisibility === true && page <= totalPages) {
+      console.log("Current page:", page);
+
+      GetMessages(chatSlug, page).then((data) => {
+        // setUserMessages((prev) => [data?.UserMessages, ...prev]);
+        setUserMessages((prev: MessagesData[] | undefined) => [
+          ...(prev || []),
+          ...data!.UserMessages,
+        ]),
+          setAiMessages((prev: MessagesData[] | undefined) => [
+            // ...data!.AiMessages,
+            // ...(prev || []),
+            ...(prev || []),
+            ...data!.AiMessages,
+          ]);
+        window.scrollTo({
+          top: document.documentElement.scrollHeight,
+          behavior: "smooth",
+        });
+        setPage((prev) => prev + 1);
+      });
+      // console.log("entry:", entry);
+    }
+  }, [chatSlug, entryVisibility, page, totalPages]);
+
+  useEffect(() => {
+    window.scrollTo({
+      top: document.documentElement.scrollHeight,
+      behavior: "smooth",
+    });
+  }, []);
+
+  useEffect(() => {
+    console.log("entryVisibility", entryVisibility);
+  }, [entryVisibility]);
 
   return (
     <>
       <div className="px-4 mx-auto flex flex-col max-w-6xl">
-        <div className="flex justify-start flex-col">
+        <div className="flex justify-start flex-col max-h-5xl">
+          <div ref={myRef}></div>
+          {/* <div ref={myRef}>{dbSortedMessages && dbSortedMessages[0]}</div>
+          <div>{dbSortedMessages && dbSortedMessages.slice(1, -1)}</div> */}
           <div>{dbSortedMessages}</div>
           <div>{currentSortedMessages}</div>
         </div>
         <div className="relative flex flex-col">
           <button
             onClick={handleSubmit}
+            disabled={submit}
             className="absolute right-0 top-[3.9rem] bg-blue-2 text-white py-2 px-4 rounded-full mr-2 mt-2 z-10"
           >
             Submit

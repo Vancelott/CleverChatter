@@ -3,7 +3,13 @@
 import { fetchChatsAction } from "@/app/actions/actions";
 import GetAllChats from "@/app/actions/getAllChats";
 import { useRouter } from "next/navigation";
-import { startTransition, useCallback, useEffect, useState } from "react";
+import {
+  startTransition,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import {
   ChevronDoubleRightIcon,
   ChevronDoubleLeftIcon,

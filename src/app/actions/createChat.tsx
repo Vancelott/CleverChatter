@@ -61,7 +61,7 @@ const CreateChat = async (
       },
     });
 
-    const newMessage = await prisma.conversation.create({
+    const newConversation = await prisma.conversation.create({
       data: {
         slug: generatedSlug,
         UserMessages: {

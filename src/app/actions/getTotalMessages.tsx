@@ -14,6 +14,10 @@ const GetTotalMessages = async (chatSlug: string) => {
     },
   });
 
+  // if (!conversationIdObject!.id) {
+  //   console.log("Conversation id missing in getTotalMessages.");
+  // }
+
   const conversationId = conversationIdObject!.id;
 
   const userMessagesCount = await prisma.userMessages.count({
@@ -33,6 +37,21 @@ const GetTotalMessages = async (chatSlug: string) => {
   });
 
   const totalMessages = userMessagesCount + aiMessagesCount;
+  // const pageSize = totalMessages / 2 ? 4 : 3;
+  // const totalPages = Math.ceil(totalMessages / pageSize);
+
+  // console.log("userMessagesCount", userMessagesCount);
+  // console.log("aiMessagesCount", aiMessagesCount);
+
+  // console.log(
+  //   "totalMessages, pageSize, totalPages:",
+  //   totalMessages,
+  //   pageSize,
+  //   totalPages
+  // );
+  // console.log("totalPages:", totalPages);
+
+  // return { totalMessages, pageSize, totalPages };
 
   return totalMessages;
 };

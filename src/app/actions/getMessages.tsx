@@ -3,6 +3,7 @@
 // import prisma from "@/app/libs/prismadb";
 import { useSession } from "next-auth/react";
 import { prisma } from "../libs/prismadb";
+import GetTotalMessages from "./getTotalMessages";
 
 const GetMessages = async (chatSlug: string, page: number) => {
   const conversationIdObject = await prisma.conversation.findFirst({
@@ -32,15 +33,20 @@ const GetMessages = async (chatSlug: string, page: number) => {
     },
   });
 
+  const currentPage = page;
+
+  // const getPageData = GetTotalMessages(chatSlug);
+  // const pageData = await getPageData;
+
+  // const pageSize = pageData.pageSize;
+  // const totalMessages = pageData.totalMessages;
+  // const totalPages = pageData.totalPages;
+
   const totalMessages = userMessagesCount + aiMessagesCount;
+  const pageSize = totalMessages / 2 ? 4 : 3;
+  const totalPages = Math.ceil(totalMessages / pageSize);
 
-  const pageSize = 2;
-
-  const currentPage = page!;
-
-  const totalPages = Math.ceil(totalMessages / 2 / pageSize);
-
-  const maxPage = Math.min(totalPages, Math.max(currentPage + 5, 10));
+  // const maxPage = Math.min(totalPages, Math.max(currentPage + 5, 10));
 
   if (!page) {
     console.log("Page is missing in getMessages");
@@ -58,28 +64,31 @@ const GetMessages = async (chatSlug: string, page: number) => {
           // skip: (currentPage - 1) * pageSize,
           skip: skipValue,
           take: pageSize,
-          orderBy: {
-            createdAt: "asc",
-          },
           // orderBy: {
-          //   id: "asc",
+          //   createdAt: "asc",
           // },
+          orderBy: {
+            id: "asc",
+          },
         },
         AiMessages: {
           skip: skipValue,
           take: pageSize,
-          orderBy: {
-            createdAt: "asc",
-          },
           // orderBy: {
-          //   id: "asc",
+          //   createdAt: "asc",
           // },
+          orderBy: {
+            id: "asc",
+          },
         },
       },
       // take: pageSize,
     });
 
-    // console.log(messages);
+    // console.log("userMessagesCount:", userMessagesCount);
+    // console.log("aimessage:", aiMessagesCount);
+    console.log("currentPage:", currentPage);
+    // console.log("totalPages:", totalPages);
     return messages;
   } else {
     console.log("All of the currently available messages have been fetched.");

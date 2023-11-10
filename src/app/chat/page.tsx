@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import getCurrentUser from "../actions/getCurrentUser";
 import octokit from "../libs/octokit";
@@ -43,6 +43,9 @@ export default function Chat() {
   const [currentSortedMessages, setCurrentSortedMessages] = useState<any[]>();
   const [clickCount, setClickCount] = useState(0);
 
+  const [hideList, setHideList] = useState(false);
+  const [chatSlug, setChatSlug] = useState("");
+
   const { data: session } = useSession();
 
   useEffect(() => {
@@ -83,24 +86,6 @@ export default function Chat() {
       fetchRepoList();
     }
   }, [username]);
-
-  useEffect(() => {
-    setCurrentSortedMessages([]);
-    setCurrentSortedMessages(
-      messages.user?.map((userMessage: string, index) => (
-        <div key={index}>
-          <p className="px-4 py-6 bg-blue-1 text-white rounded-3xl">
-            {index >= 1 && messages.ai[index]
-              ? messages.ai && messages.ai[index]
-              : lastOutput}
-          </p>
-          <p className="px-4 py-6 bg-blue-0 text-white rounded-3xl my-2">
-            {index >= 1 ? userMessage : null}
-          </p>
-        </div>
-      ))
-    );
-  }, [lastOutput, messages.ai, messages.user]);
 
   const reposMap = data?.map((repo) => (
     <div key={repo.id} onClick={() => setSelectedRepo(repo.name)}>
@@ -358,7 +343,7 @@ export default function Chat() {
 
           // setOutput(output.token.text);
         } else {
-          setCurrentOutput(await output.generated_text!);
+          setCurrentOutput(output.generated_text!);
           setMessages((prev) => ({
             ...prev,
             ai: [...prev.ai, output.generated_text!],
@@ -373,18 +358,6 @@ export default function Chat() {
     }
   };
 
-  const userMessageMap = messages.user.map((userMessage, index) => (
-    <div key={`user-${index}`}>
-      <p>{userMessage}</p>
-    </div>
-  ));
-
-  const aiMessageMap = messages.ai.map((aiMessage, index) => (
-    <div key={`ai-${index}`}>
-      <p>{aiMessage}</p>
-    </div>
-  ));
-
   const [selectedChildRepo, setSelectedChildRepo] = useState("");
 
   const getSelectedRepo = (name: string) => {
@@ -393,13 +366,6 @@ export default function Chat() {
     // return selectedChildRepo;
   };
 
-  const [hideList, setHideList] = useState(false);
-  const [chatSlug, setChatSlug] = useState("");
-
-  useEffect(() => {
-    console.log(messages);
-  }, [messages]);
-
   // creates chat once the full output from the ai is available
   useEffect(() => {
     if (
@@ -407,13 +373,20 @@ export default function Chat() {
       currentOutput.length > 1 &&
       selectedChildRepo.length > 1
     ) {
-      createChat(firstUserPrompt, currentOutput, selectedChildRepo).then(
+      const lastAiMessage = messages.ai[messages.ai.length - 1];
+
+      createChat(firstUserPrompt, lastAiMessage, selectedChildRepo).then(
         (data) => (
           setChatSlug(data?.slug!), setClickCount((prevCount) => prevCount + 1)
         )
       );
     }
   }, [currentOutput, clickCount, selectedChildRepo, firstUserPrompt]);
+
+  const updateChatMessages = useCallback(() => {
+    const lastAiMessage = messages.ai[messages.ai.length - 1];
+    UpdateChat(userInput, lastAiMessage, chatSlug);
+  }, [chatSlug, messages.ai, userInput]);
 
   const handleSubmit = async () => {
     try {
@@ -430,64 +403,76 @@ export default function Chat() {
       console.log("Error during submit:", error);
     } finally {
       if (clickCount !== 0) {
-        UpdateChat(userInput, currentOutput, chatSlug);
+        updateChatMessages();
       }
     }
   };
 
-  useEffect(() => {
-    if (messages.ai.length && messages.user.length > 1) {
-      setCurrentSortedMessages([]);
-      setCurrentSortedMessages(
-        messages.user?.map((userMessage: string, index) => (
-          <div key={index}>
-            <p className="px-4 py-6 bg-blue-0 text-white rounded-3xl my-2">
-              {userMessage}
-            </p>
-            <p className="px-4 py-6 bg-blue-1 text-white rounded-3xl">
-              {messages.ai[index]
-                ? messages.ai && messages.ai[index]
-                : lastOutput}
-            </p>
-          </div>
-        ))
-      );
-    }
-  }, [lastOutput, messages.ai, messages.user]);
-
   return (
     <>
       {/* <div className="bg-gradient-to-b from-blue-0 to-blue-1"> */}
-      <div className="bg-blue-0 h-screen w-full relative z-10">
-        <div className="flex flex-col max-w-3xl mx-auto justify-center items-center py-32">
-          <p className="font-bold text-5xl pb-4">Your repositories</p>
-          <p className="font-extralight text-xl pb-4">
-            Choose a repository to prepare on
-          </p>
-          {!hideList && (
+      <div className="flex flex-col justify-center items-center bg-blue-00 h-screen max-w-5xl mx-auto px-4 relative py-32 z-10">
+        {!hideList && (
+          <>
+            <p className="font-bold text-5xl pb-4">Your repositories</p>
+            <p className="font-extralight text-xl pb-4">
+              Choose a repository to prepare on
+            </p>
+          </>
+        )}
+        {!hideList && (
+          <>
             <RepoList data={data} handleCallback={getSelectedRepo} />
-          )}
-          {!hideList && <p>Currently selected: {selectedChildRepo}</p>}
-          <button
-            onClick={handleSubmit}
-            className="font-semibold text-md px-4 py-2 mt-6 bg-white-0 text-blue-0 rounded-md"
-          >
-            Submit
-          </button>
-          {hideList && (
-            <textarea
-              className="w-96 h-36 my-8 text-black"
-              // value={messages.user}
-
-              // type="text"
-              onChange={(e) => setUserInput(e.target.value)}
-            />
-          )}
-          <div>{currentSortedMessages}</div>
-          {/* <div className="text-white bg-blue-1 py-16 px-32 my-8">
-            <p>dbMessages: {dbMessages.userReq}</p>
-          </div> */}
-        </div>
+            <button
+              onClick={handleSubmit}
+              className="font-semibold text-md px-4 py-2 mt-6 bg-white-0 text-blue-0 rounded-md"
+            >
+              Submit
+            </button>
+          </>
+        )}
+        {hideList && (
+          <>
+            <div className="px-4 mx-auto flex flex-col max-w-5xl">
+              <div className="flex justify-start flex-col">
+                {messages.user?.map((userMessage: string, index) => (
+                  <div key={index}>
+                    <p className="px-4 py-6 bg-blue-0 text-white rounded-3xl my-2">
+                      {userMessage}
+                    </p>
+                    <p className="px-4 py-6 bg-blue-1 text-white rounded-3xl">
+                      {messages.ai[index]
+                        ? messages.ai && messages.ai[index]
+                        : lastOutput}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div>
+              <div className="static">
+                <div className="relative flex flex-col">
+                  <button
+                    onClick={handleSubmit}
+                    disabled={submit}
+                    className="absolute right-0 top-[3.9rem] bg-blue-2 text-white py-2 px-4 rounded-full mr-2 mt-2 z-10"
+                  >
+                    Submit
+                  </button>
+                  <textarea
+                    rows={4}
+                    name="comment"
+                    id="comment"
+                    placeholder="Send a message"
+                    className="w-full p-2 shadow-sm focus:ring-blue-3 z-15 resize-none focus:border-blue-3 block text-black sm:text-sm border-gray-300 rounded-md mt-10 overflow-visible"
+                    defaultValue={""}
+                    onChange={(e) => setUserInput(e.target.value)}
+                  />
+                </div>
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </>
   );

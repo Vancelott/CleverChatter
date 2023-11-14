@@ -36,6 +36,7 @@ export default function Slug({ params }: { params: { slug: string } }) {
   const [totalMessages, setTotalMessages] = useState<number>(0);
 
   const [firstRun, setFirstRun] = useState(true);
+  const [allMessagesFetched, setAllMessagesFetched] = useState(false);
 
   const pageSize = totalMessages / 2 ? 4 : 3;
   const totalPages = Math.ceil(totalMessages! / pageSize);
@@ -89,7 +90,6 @@ export default function Slug({ params }: { params: { slug: string } }) {
     } catch (error) {
       console.log(error);
     } finally {
-      console.log("currentOutput handleInputSUbmit:", currentOutput);
       setLastOutput([]);
     }
 
@@ -158,18 +158,26 @@ export default function Slug({ params }: { params: { slug: string } }) {
 
   useEffect(() => {
     setTimeout(() => {
-      if (entryVisibility === true && firstRun === false) {
+      if (
+        entryVisibility === true &&
+        firstRun === false &&
+        allMessagesFetched === false
+      ) {
         GetMessages(chatSlug, page).then((data) => {
-          setUserMessages((prev: MessagesData[] | undefined) => [
-            ...(prev || []),
-            ...data!.UserMessages,
-          ]),
-            setAiMessages((prev: MessagesData[] | undefined) => [
-              // ...data!.AiMessages,
-              // ...(prev || []),
+          if (data) {
+            setUserMessages((prev: MessagesData[] | undefined) => [
               ...(prev || []),
-              ...data!.AiMessages,
-            ]);
+              ...data!.UserMessages,
+            ]),
+              setAiMessages((prev: MessagesData[] | undefined) => [
+                // ...data!.AiMessages,
+                // ...(prev || []),
+                ...(prev || []),
+                ...data!.AiMessages,
+              ]);
+          } else {
+            setAllMessagesFetched(true);
+          }
         });
         if (prevPage + 1 !== totalPages) {
           setPage((prev) => {
@@ -177,16 +185,21 @@ export default function Slug({ params }: { params: { slug: string } }) {
             return prev + 1;
           });
         }
-        if (page - 1 <= totalPages) {
-          setPage((prev) => prev + 1);
-        }
         // window.scrollTo({
         //   top: document.documentElement.scrollHeight,
         //   behavior: "smooth",
         // });
       }
-    }, 2000);
-  }, [chatSlug, entryVisibility, firstRun, page, prevPage, totalPages]);
+    }, 1000);
+  }, [
+    allMessagesFetched,
+    chatSlug,
+    entryVisibility,
+    firstRun,
+    page,
+    prevPage,
+    totalPages,
+  ]);
 
   useEffect(() => {
     console.log("entryVisibility", entryVisibility);
@@ -200,17 +213,18 @@ export default function Slug({ params }: { params: { slug: string } }) {
           <div className="flex flex-col-reverse max-h-xl">
             {userMessages?.map(
               (userMessage: MessagesData, index = +userMessage.id) => (
-                <div key={index} className="flex flex-col-reverse">
+                <div key={index} className="">
                   <p className="px-4 py-6 bg-blue-0 text-white rounded-3xl my-2">
-                    {userMessage.messageContent} - {`${userMessage.createdAt}`}
+                    {userMessage.messageContent}
+                    {/* - {`${userMessage.createdAt}`} */}
                   </p>
                   <p className="px-4 py-6 bg-blue-1 text-white rounded-3xl">
                     {aiMessages &&
                       aiMessages[index] &&
                       aiMessages[index].messageContent}
-                    {aiMessages &&
+                    {/* {aiMessages &&
                       aiMessages[index] &&
-                      `${aiMessages[index].createdAt}`}
+                      `${aiMessages[index].createdAt}`} */}
                   </p>
                 </div>
               )

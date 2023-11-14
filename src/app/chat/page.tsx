@@ -381,15 +381,25 @@ export default function Chat() {
         )
       );
     }
-  }, [currentOutput, clickCount, selectedChildRepo, firstUserPrompt]);
+  }, [
+    currentOutput,
+    clickCount,
+    selectedChildRepo,
+    firstUserPrompt,
+    messages.ai,
+  ]);
 
-  const updateChatMessages = useCallback(() => {
-    const lastAiMessage = messages.ai[messages.ai.length - 1];
-    UpdateChat(userInput, lastAiMessage, chatSlug);
-  }, [chatSlug, messages.ai, userInput]);
+  useEffect(() => {
+    if (currentOutput.length > 0 && clickCount !== 0) {
+      UpdateChat(userInput, currentOutput, chatSlug);
+      setCurrentOutput("");
+      setUserInput("");
+    }
+  }, [chatSlug, clickCount, currentOutput, userInput]);
 
   const handleSubmit = async () => {
     try {
+      setSubmit(true);
       setHideList(true);
       if (clickCount === 0) {
         await fetchItemPaths(`${username}`, `${selectedChildRepo}`, "src/app");
@@ -402,9 +412,7 @@ export default function Chat() {
     } catch (error) {
       console.log("Error during submit:", error);
     } finally {
-      if (clickCount !== 0) {
-        updateChatMessages();
-      }
+      setSubmit(false);
     }
   };
 

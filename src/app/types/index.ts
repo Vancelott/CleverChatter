@@ -135,3 +135,14 @@ export interface CurrentMessages {
   ai: string[];
   user: string[];
 }
+
+export interface ChatData {
+  id: string;
+  slug: string;
+  createdAt: Date;
+  updatedAt: Date;
+  published: boolean;
+  title: string;
+  repository: string;
+  userId: string;
+}

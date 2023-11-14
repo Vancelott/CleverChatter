@@ -27,29 +27,12 @@ export const RepoList = ({
   const end = start + Number(repoPerPage);
 
   const lastPage = totalRepos / repoPerPage;
-
-  useEffect(() => {
-    console.log(selectedRepo);
-  }, [selectedRepo]);
-
   const paginatedRepos = data.slice(start, end);
-
-  const [ariaSelected, setAriaSelected] = useState(false);
-
-  const handleRepoSelection = (name: any) => {
-    setSelectedRepo(name);
-    // selectedRepo == name ? setAriaSelected(true) : false;
-  };
-  // const handleRepoSelection = ({ item }: any) => {
-  //   setSelectedRepo(item.name);
-  //   console.log(selectedRepo);
-  //   // handleCallback(selectedRepo);
-  // };
 
   return (
     <SelectedRepoContext.Provider value={selectedRepo}>
       <nav
-        className="h-full overflow-y-auto border-2 border-white rounded-xl"
+        className="h-full overflow-y-visible border-2 border-white rounded-xl"
         aria-label="Directory"
       >
         <ul

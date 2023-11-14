@@ -68,7 +68,7 @@ const GetMessages = async (chatSlug: string, page: number) => {
           //   createdAt: "asc",
           // },
           orderBy: {
-            id: "asc",
+            id: "desc",
           },
         },
         AiMessages: {
@@ -78,7 +78,7 @@ const GetMessages = async (chatSlug: string, page: number) => {
           //   createdAt: "asc",
           // },
           orderBy: {
-            id: "asc",
+            id: "desc",
           },
         },
       },
@@ -88,10 +88,11 @@ const GetMessages = async (chatSlug: string, page: number) => {
     // console.log("userMessagesCount:", userMessagesCount);
     // console.log("aimessage:", aiMessagesCount);
     console.log("currentPage:", currentPage);
-    // console.log("totalPages:", totalPages);
+    console.log("totalPages:", totalPages);
     return messages;
   } else {
     console.log("All of the currently available messages have been fetched.");
+    return null;
   }
 };
 

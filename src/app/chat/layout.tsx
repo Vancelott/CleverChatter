@@ -30,9 +30,9 @@ export default async function ChatLayout({
   // console.log(messages);
 
   return (
-    <div className="flex w-full h-screen">
+    <div className="flex w-full h-screen bg-blue-00">
       <ChatNav />
-      <div className="ml-0 lg:ml-[244px] w-full h-screen bg-blue-00">
+      <div className="ml-0 lg:ml-[278px] w-full h-screen bg-blue-00">
         {/* <Chat dbMessages={messages!} /> */}
         {children}
       </div>

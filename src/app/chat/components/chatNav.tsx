@@ -14,27 +14,28 @@ import {
   ChevronDoubleRightIcon,
   ChevronDoubleLeftIcon,
 } from "@heroicons/react/24/solid";
+import { ChatData } from "@/app/types";
+import {
+  eachDayOfInterval,
+  isAfter,
+  isBefore,
+  isToday,
+  subDays,
+} from "date-fns";
+
 // import { useRouter } from "next/navigation";
 
-interface Chats {
-  id: string;
-  slug: string;
-  createdAt: Date;
-  updatedAt: Date;
-  published: boolean;
-  title: string;
-  userId: string;
-}
-
 export const ChatNav = () => {
-  const [chats, setChats] = useState<any>();
+  const [chats, setChats] = useState<ChatData[]>([]);
   const [hidden, setHidden] = useState(false);
   const [slug, setSlug] = useState("");
 
-  const [chatsToday, setChatsToday] = useState<Chats[]>([]);
-  const [chatsYesterday, setChatsYesterday] = useState<Chats[]>([]);
-  const [chatsThreeDaysAgo, setChatsThreeDaysAgo] = useState<Chats[]>([]);
-  const [chatsSevenDaysAgo, setChatsSevenDaysAgo] = useState<Chats[]>([]);
+  const [chatsToday, setChatsToday] = useState<ChatData[]>([]);
+  const [chatsYesterday, setChatsYesterday] = useState<ChatData[]>([]);
+  const [chatsPreviousSevenDays, setChatsPreviousSevenDays] = useState<
+    ChatData[]
+  >([]);
+  const [olderChats, setOlderChats] = useState<ChatData[]>([]);
 
   const queryParams = new URLSearchParams("=");
   const router = useRouter();
@@ -46,51 +47,41 @@ export const ChatNav = () => {
   };
 
   useEffect(() => {
-    const currentDate = new Date();
-    const dateThreeDaysAgo: Date = new Date(
-      Date.now() - 3 * 24 * 60 * 60 * 1000
-    );
-    const dateSevenDaysAgo: Date = new Date(
-      Date.now() - 7 * 24 * 60 * 60 * 1000
-    );
-
     try {
-      // const fetchChats = GetAllChats().then((data) => setChats(data));
       const fetchChats = async () => {
         const fetch = await GetAllChats();
         const result = await fetch;
-        setChats(result);
-        const chatsToday = result?.filter(
-          (chat) => chat.createdAt == currentDate
-        );
-        setChatsToday(chatsToday!);
-        const chatsThreeDaysAgo = result?.filter(
-          (chat) => chat.createdAt < dateThreeDaysAgo
-        );
-        setChatsThreeDaysAgo(chatsThreeDaysAgo!);
-        const chatsSevenDaysAgo = result?.filter(
-          (chat) => chat.createdAt < dateSevenDaysAgo
-        );
-        setChatsSevenDaysAgo(chatsSevenDaysAgo!);
-
-        // const datesMap = result?.map((chat) => {
-        //   const chatDate = chat.createdAt;
-        //   console.log("ChatDate:", chatDate);
-        //   console.log("currentDate:", currentDate);
-        //   if (chatDate < dateSevenDaysAgo) {
-        //     setChatsSevenDaysAgo((prev) => [...prev, chat]);
-        //   } else if (chatDate < dateThreeDaysAgo) {
-        //     setChatsThreeDaysAgo((prev) => [...prev, chat]);
-        //   } else if (chatDate === currentDate) {
-        //     setChatsToday((prev) => [...prev, chat]);
-        //   }
-        // });
+        setChats(result!);
       };
       fetchChats();
     } catch (error) {
       console.log(error);
     }
   }, []);
+
+  useEffect(() => {
+    const dateToday = new Date();
+
+    const dateYesterday = subDays(dateToday, 1);
+    const datePreviousSevenDays = subDays(dateToday, 8);
+
+    setChatsToday([]);
+    setChatsYesterday([]);
+    setChatsPreviousSevenDays([]);
+    setOlderChats([]);
+
+    chats?.forEach((chat) => {
+      if (isToday(chat.createdAt)) {
+        setChatsToday((prev) => [...prev, chat]);
+      } else if (isBefore(dateYesterday, chat.createdAt)) {
+        setChatsYesterday((prev) => [...prev, chat]);
+      } else if (isBefore(datePreviousSevenDays, chat.createdAt)) {
+        setChatsPreviousSevenDays((prev) => [...prev, chat]);
+      } else {
+        setOlderChats((prev) => [...prev, chat]);
+      }
+    });
+  }, [chats]);
 
   const handleNewChat = () => {
     router.push(`/chat`, { scroll: false });
@@ -111,9 +102,9 @@ export const ChatNav = () => {
       <div
         className={`${
           hidden ? "flex" : "hidden lg:flex"
-        } flex-col h-full min-w-[244px] bg-gray-800 fixed z-40 transition-all duration-1000 delay-500`}
+        } flex-col h-full min-w-[278px] bg-gray-800 fixed z-40 transition-all duration-1000 delay-500`}
       >
-        <div className="flex-1 flex flex-col pt-5 pb-4 overflow-y-auto">
+        <div className="flex-1 flex flex-col pt-5 pb-4 hover:overflow-y-scroll overflow-hidden">
           {/* <div className="flex items-center flex-shrink-0 px-4">
             <img className="h-8 w-auto" />
           </div> */}
@@ -128,19 +119,7 @@ export const ChatNav = () => {
             >
               Start new chat
             </button>
-            {chats?.map((item: any) => (
-              <p
-                key={item.id}
-                onClick={() => handleClick(item.slug)}
-                className={`text-gray-300 hover:bg-gray-700 hover:text-white
-            group flex items-center px-2 py-2 text-sm font-medium rounded-md cursor-pointer ${
-              slug == item.slug ? "bg-gray-600 text-gray-100" : "bg-gray-800"
-            }`}
-              >
-                {item.title}
-              </p>
-            ))}
-            {/* <p>Today</p>
+            <p className="text-white text-md font-semibold px-1">Today</p>
             {chatsToday?.map((item: any) => (
               <p
                 key={item.id}
@@ -153,8 +132,8 @@ export const ChatNav = () => {
                 {item.title}
               </p>
             ))}
-            <p>Previous 3 Days</p>
-            {chatsThreeDaysAgo?.map((item: any) => (
+            <p className="text-white text-md font-semibold px-1">Yesterday</p>
+            {chatsYesterday?.map((item: any) => (
               <p
                 key={item.id}
                 onClick={() => handleClick(item.slug)}
@@ -166,8 +145,10 @@ export const ChatNav = () => {
                 {item.title}
               </p>
             ))}
-            <p>Previous 7 Days</p>
-            {chatsSevenDaysAgo?.map((item: any) => (
+            <p className="text-white text-lg font-semibold px-1">
+              Previous 7 Days
+            </p>
+            {chatsPreviousSevenDays?.map((item: any) => (
               <p
                 key={item.id}
                 onClick={() => handleClick(item.slug)}
@@ -178,7 +159,22 @@ export const ChatNav = () => {
               >
                 {item.title}
               </p>
-            ))} */}
+            ))}
+            <p className="text-white text-md font-semibold px-1">
+              Rest of the chats
+            </p>
+            {olderChats?.map((item: any) => (
+              <p
+                key={item.id}
+                onClick={() => handleClick(item.slug)}
+                className={`text-gray-300 hover:bg-gray-700 hover:text-white
+            group flex items-center px-2 py-2 text-sm font-medium rounded-md cursor-pointer ${
+              slug == item.slug ? "bg-gray-600 text-gray-100" : "bg-gray-800"
+            }`}
+              >
+                {item.title}
+              </p>
+            ))}
           </nav>
         </div>
         <div className="flex-shrink-0 flex bg-gray-700 p-4">

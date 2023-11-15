@@ -133,26 +133,16 @@ export default function Slug({ params }: { params: { slug: string } }) {
           ...data!.UserMessages,
         ]),
           setAiMessages((prev: MessagesData[] | undefined) => [
-            // ...data!.AiMessages,
-            // ...(prev || []),
             ...(prev || []),
             ...data!.AiMessages,
           ]);
-        //   console.log("data?.totalPages", data?.totalPages);
-        // setTotalPages(data?.totalPages as number);
       });
       setPage((prev) => prev + 1);
-      // setPage((prev) => {
-      //   setPrevPage(prev);
-      //   return prev + 1;
-      // });
       // window.scrollTo({
       //   top: document.documentElement.scrollHeight,
       //   behavior: "smooth",
       // });
-      // setTimeout(() => {
       setFirstRun(false);
-      // }, 2000);
     }
   }, [chatSlug, entryVisibility, firstRun, page]);
 
@@ -170,8 +160,6 @@ export default function Slug({ params }: { params: { slug: string } }) {
               ...data!.UserMessages,
             ]),
               setAiMessages((prev: MessagesData[] | undefined) => [
-                // ...data!.AiMessages,
-                // ...(prev || []),
                 ...(prev || []),
                 ...data!.AiMessages,
               ]);
@@ -200,10 +188,6 @@ export default function Slug({ params }: { params: { slug: string } }) {
     prevPage,
     totalPages,
   ]);
-
-  useEffect(() => {
-    console.log("entryVisibility", entryVisibility);
-  }, [entryVisibility]);
 
   return (
     <>

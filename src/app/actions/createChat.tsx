@@ -17,7 +17,7 @@ const CreateChat = async (
 
     const currentUser = await getCurrentUser();
 
-    const title = aiOutput.substring(1, 35);
+    const title = aiOutput.substring(1, 45);
 
     const slugifiedTitle = slugify(title, {
       strict: true,

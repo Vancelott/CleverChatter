@@ -56,17 +56,19 @@ const UpdateChat = async (
       },
     });
 
-    const aiMessage = await prisma.aiMessages.create({
-      data: {
-        messageContent: aiOutput,
-        conversation: {
-          connect: { slug: chatSlug },
+    if (userMessage) {
+      const aiMessage = await prisma.aiMessages.create({
+        data: {
+          messageContent: aiOutput,
+          conversation: {
+            connect: { slug: chatSlug },
+          },
         },
-      },
-    });
+      });
 
-    console.log("messages created: ", userMessage, aiMessage);
-    return [userMessage, aiMessage];
+      console.log("messages created: ", userMessage, aiMessage);
+      return [userMessage, aiMessage];
+    }
   } catch (error: any) {
     return null;
   }

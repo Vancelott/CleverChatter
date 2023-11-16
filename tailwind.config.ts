@@ -21,6 +21,7 @@ const config: Config = {
         "blue-1": "#2F6690",
         "blue-2": "#3A7CA5",
         "blue-3": "#81C3D7",
+        "blue-4": "#64B5CE",
         "white-0": "#D9DCD6",
       },
     },

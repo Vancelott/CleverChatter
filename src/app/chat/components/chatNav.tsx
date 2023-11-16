@@ -17,7 +17,10 @@ import {
   PlusIcon,
   // ChatBubbleLeftIcon,
 } from "@heroicons/react/24/solid";
-import { ChatBubbleLeftIcon } from "@heroicons/react/24/outline";
+import {
+  ChatBubbleLeftIcon,
+  ChatBubbleLeftRightIcon,
+} from "@heroicons/react/24/outline";
 import { ChatData } from "@/app/types";
 import {
   eachDayOfInterval,
@@ -95,86 +98,108 @@ export const ChatNav = () => {
   };
 
   return (
-    <div className={`${hidden ? "pr-0" : "lg:pr-[288px]"}`}>
-      <div className="h-8 w-8 fixed ">
-        <button
-          onClick={() => setHidden(!hidden)}
-          className={`px-2 py-1 h-10 w-10 m-3 shadow-md shadow-gray-800 fixed rounded-full bg-blue-2 ${
-            hidden ? "ml-3" : "ml-[18.5rem]"
-          }`}
-        >
-          {hidden ? <ChevronDoubleRightIcon /> : <ChevronDoubleLeftIcon />}
-        </button>
-      </div>
+    <div className={`${hidden ? "pr-0" : "sm:pr-[288px] mr-12"} relative`}>
+      <button
+        onClick={() => setHidden(!hidden)}
+        className={`px-2 py-1 h-10 w-10 m-3 shadow-md shadow-gray-800 fixed cursor-pointer rounded-full bg-blue-2 ${
+          hidden ? "ml-3" : "ml-[18.5rem]"
+        }`}
+      >
+        {hidden ? <ChevronDoubleRightIcon /> : <ChevronDoubleLeftIcon />}
+      </button>
       <div
         className={`${
           hidden ? "hidden" : "flex"
         } flex-col h-full min-w-[288px] bg-gray-800 fixed z-40 transition-all duration-1000 delay-500`}
       >
-        <div className="flex flex-col pt-2 pb-4 hover:overflow-y-scroll overflow-hidden w-72">
-          {/* <div className="flex items-center flex-shrink-0 px-4">
-            <img className="h-8 w-auto" />
-          </div> */}
+        <div className="flex flex-col my-auto pt-2 pb-4 hover:overflow-y-scroll overflow-hidden w-72">
           <nav
             className="mt-5 flex-1 px-2 bg-gray-800 space-y-1"
             aria-label="Sidebar"
           >
-            <p className="text-white text-sm font-semibold px-1">Today</p>
-            {chatsToday?.map((item: ChatData) => (
-              <div
-                key={item.id}
-                onClick={() => handleClick(item.slug)}
-                className={`text-gray-300 hover:bg-gray-700 hover:text-white
+            {chats.length === 0 && (
+              <div className="flex items-center justify-center px-4 w-full h-full">
+                <ChatBubbleLeftRightIcon className="h-16 w-16 text-gray-700 relative mb-24" />
+                <p className="text-center text-gray-300 font-medium text-md absolute px-2">
+                  Your chat history is empty. Start a new conversation to see it
+                  here!
+                </p>
+              </div>
+            )}
+            {chatsToday.length > 0 && (
+              <div>
+                <p className="text-white text-sm font-semibold px-1">Today</p>
+                {chatsToday?.map((item: ChatData) => (
+                  <div
+                    key={item.id}
+                    onClick={() => handleClick(item.slug)}
+                    className={`text-gray-300 hover:bg-gray-700 hover:text-white
       group flex items-center px-2 py-2 text-sm font-medium rounded-md cursor-pointer space-x-2 w-[268px]
       ${slug == item.slug ? "bg-gray-600 text-gray-100" : "bg-gray-800"}`}
-              >
-                <ChatBubbleLeftIcon className="h-5 w-5" />
-                <p className="truncate text-ellipsis">{item.title}</p>
+                  >
+                    <ChatBubbleLeftIcon className="h-[20px] w-[20px]" />
+                    <p className="truncate text-ellipsis">{item.title}</p>
+                  </div>
+                ))}
               </div>
-            ))}
-            <p className="text-white text-sm font-semibold px-1">Yesterday</p>
-            {chatsYesterday?.map((item: ChatData) => (
-              <div
-                key={item.id}
-                onClick={() => handleClick(item.slug)}
-                className={`text-gray-300 hover:bg-gray-700 hover:text-white
+            )}
+            {chatsYesterday.length > 0 && (
+              <div>
+                <p className="text-white text-sm font-semibold px-1">
+                  Yesterday
+                </p>
+                {chatsYesterday?.map((item: ChatData) => (
+                  <div
+                    key={item.id}
+                    onClick={() => handleClick(item.slug)}
+                    className={`text-gray-300 hover:bg-gray-700 hover:text-white
     group flex items-center px-2 py-2 text-sm font-medium rounded-md cursor-pointer space-x-2 w-[268px]
     ${slug == item.slug ? "bg-gray-600 text-gray-100" : "bg-gray-800"}`}
-              >
-                <ChatBubbleLeftIcon className="h-5 w-5" />
-                <p className="truncate text-ellipsis">{item.title}</p>
+                  >
+                    <ChatBubbleLeftIcon className="h-[20px] w-[20px]" />
+                    <p className="truncate text-ellipsis">{item.title}</p>
+                  </div>
+                ))}
               </div>
-            ))}
-            <p className="text-white text-sm font-semibold px-1">
-              Previous 7 Days
-            </p>
-            {chatsPreviousSevenDays?.map((item: ChatData) => (
-              <div
-                key={item.id}
-                onClick={() => handleClick(item.slug)}
-                className={`text-gray-300 hover:bg-gray-700 hover:text-white
+            )}
+            {chatsPreviousSevenDays.length > 0 && (
+              <div>
+                <p className="text-white text-sm font-semibold px-1">
+                  Previous 7 Days
+                </p>
+                {chatsPreviousSevenDays?.map((item: ChatData) => (
+                  <div
+                    key={item.id}
+                    onClick={() => handleClick(item.slug)}
+                    className={`text-gray-300 hover:bg-gray-700 hover:text-white
     group flex items-center px-2 py-2 text-sm font-medium rounded-md cursor-pointer space-x-2 w-[268px]
     ${slug == item.slug ? "bg-gray-600 text-gray-100" : "bg-gray-800"}`}
-              >
-                <ChatBubbleLeftIcon className="h-5 w-5" />
-                <p className="truncate text-ellipsis">{item.title}</p>
+                  >
+                    <ChatBubbleLeftIcon className="h-[20px] w-[20px]" />
+                    <p className="truncate text-ellipsis">{item.title}</p>
+                  </div>
+                ))}
               </div>
-            ))}
-            <p className="text-white text-sm font-semibold px-1">
-              Rest of the chats
-            </p>
-            {olderChats?.map((item: ChatData) => (
-              <div
-                key={item.id}
-                onClick={() => handleClick(item.slug)}
-                className={`text-gray-300 hover:bg-gray-700 hover:text-white
+            )}
+            {olderChats.length > 0 && (
+              <div>
+                <p className="text-white text-sm font-semibold px-1">
+                  Rest of the chats
+                </p>
+                {olderChats?.map((item: ChatData) => (
+                  <div
+                    key={item.id}
+                    onClick={() => handleClick(item.slug)}
+                    className={`text-gray-300 hover:bg-gray-700 hover:text-white
     group flex items-center px-2 py-2 text-sm font-medium rounded-md cursor-pointer space-x-2 w-[268px]
     ${slug == item.slug ? "bg-gray-600 text-gray-100" : "bg-gray-800"}`}
-              >
-                <ChatBubbleLeftIcon className="h-5 w-5" />
-                <p className="truncate text-ellipsis">{item.title}</p>
+                  >
+                    <ChatBubbleLeftIcon className="h-5 w-5" />
+                    <p className="truncate text-ellipsis">{item.title}</p>
+                  </div>
+                ))}
               </div>
-            ))}
+            )}
           </nav>
         </div>
         <div className="flex-shrink-0 bg-gray-700 p-4 justify-between border-t-2 border-gray-500">

@@ -8,7 +8,7 @@ import getSession from "../actions/getSession";
 import GetUsername from "../actions/getUsername";
 import toast from "react-hot-toast";
 import { HfInference } from "@huggingface/inference";
-import repoList, { RepoList, SelectedRepoContext } from "./components/repoList";
+import { RepoList } from "./components/repoList";
 import {
   RepoContent,
   ContentData,
@@ -18,6 +18,7 @@ import {
 import createChat from "../actions/createChat";
 import { send } from "process";
 import UpdateChat from "../actions/updateChat";
+import { useRouter } from "next/navigation";
 
 const hfToken = process.env.HF_ACCESS_TOKEN;
 
@@ -47,6 +48,7 @@ export default function Chat() {
   const [chatSlug, setChatSlug] = useState("");
 
   const { data: session } = useSession();
+  const router = useRouter();
 
   useEffect(() => {
     // const getUserData = async () => {
@@ -94,7 +96,6 @@ export default function Chat() {
   ));
 
   const fetchItemPaths = async (owner: string, repo: string, path: string) => {
-    // console.log("fetchItemPaths - START");
     setSubmit(true);
     const { data: pullRequest } = await octokit.rest.repos.getContent({
       owner,
@@ -120,21 +121,11 @@ export default function Chat() {
           const promisesMap = filesFilter.map((item) => item.path);
 
           repoData.push(...promisesMap);
-          // setRepoData((prevRepoData) => [...prevRepoData, ...promisesMap]);
         }
       }
-
-      // setRepoData((prevRepoData) => [...prevRepoData, ...pathData]);
     } catch (error) {
       console.log(error);
-    } finally {
-      // console.log("fetchItemPaths - DONE");
-      // fetchContent(`${username}`, `${selectedRepo}`);
-      // setRepoData((prevRepoData) => [...prevRepoData, ...pathData]);
     }
-
-    // setRepoData((prevRepoData) => [...prevRepoData, ...pathData]);
-    // setRepoData([...pathData]);
 
     return pullRequest;
   };
@@ -170,15 +161,10 @@ export default function Chat() {
   };
 
   const decodeContent = async () => {
-    console.log("contentData", contentData);
     const contentMap = await contentData.map((item) => item.content);
-
-    // const decodedContent = atob(contentMap);
-
     const decodedContent = contentMap.map((encodedString) =>
       atob(encodedString)
     );
-
     setMappedContent((prevState) => [...prevState, ...decodedContent]);
   };
 
@@ -193,10 +179,8 @@ export default function Chat() {
     },
   });`;
 
-  // this variable stores the value of the first prompt without the code
   const firstUserPrompt = `At the end of this paragraph is my project. Help me prepare for an interview by providing me with example questions which I might get asked about this code specifically.`;
 
-  // this variable stores the first prompt with the content from the github repo
   const firstInput = `At the end of this paragraph is my project. Help me prepare for an interview by providing me with example questions which I might get asked about this code specifically. ${mappedContent}`;
 
   const sendData = async () => {
@@ -257,12 +241,6 @@ export default function Chat() {
       // console.log(output);
     } catch (error) {
       console.log(error);
-    } finally {
-      // setMessages((prev) => ({
-      //   ...prev,
-      //   user: [...prev.user, presetInput],
-      //   ai: [...prev.ai, currentOutput],
-      // }));
     }
     // finally {
     //   for await (const output of hf.textGenerationStream(
@@ -307,14 +285,9 @@ export default function Chat() {
 
     try {
       setLastOutput([]);
-      // person.firstName = e.target.value;
       for await (const output of hf.textGenerationStream(
         {
           model: "tiiuae/falcon-7b-instruct",
-          // inputs:
-          //   clickCount === 1
-          //     ? `Here are my answers, let me know how I can improve them: ${userInput}`
-          //     : `${userInput}`,
           inputs:
             clickCount === 1
               ? `Here are my answers, let me know how I can improve them: ${userInput}`
@@ -348,13 +321,9 @@ export default function Chat() {
             ...prev,
             ai: [...prev.ai, output.generated_text!],
           }));
-          // console.log('Last token "generated_text":', output.generated_text);
         }
-
-      // console.log(output);
     } catch (error) {
       console.log(error);
-    } finally {
     }
   };
 
@@ -373,21 +342,23 @@ export default function Chat() {
       currentOutput.length > 1 &&
       selectedChildRepo.length > 1
     ) {
-      const lastAiMessage = messages.ai[messages.ai.length - 1];
+      const firstUserPrompt = `At the end of this paragraph is my project. Help me prepare for an interview by providing me with example questions which I might get asked about this code specifically.`;
 
-      createChat(firstUserPrompt, lastAiMessage, selectedChildRepo).then(
+      createChat(firstUserPrompt, currentOutput, selectedChildRepo).then(
         (data) => (
           setChatSlug(data?.slug!), setClickCount((prevCount) => prevCount + 1)
         )
       );
+      setCurrentOutput("");
+      setUserInput("");
     }
-  }, [
-    currentOutput,
-    clickCount,
-    selectedChildRepo,
-    firstUserPrompt,
-    messages.ai,
-  ]);
+  }, [currentOutput, clickCount, selectedChildRepo]);
+
+  useEffect(() => {
+    if (chatSlug.length > 1) {
+      router.push(`/chat/${[chatSlug]}`, { scroll: false });
+    }
+  }, [chatSlug, router]);
 
   useEffect(() => {
     if (currentOutput.length > 0 && clickCount !== 0) {
@@ -418,25 +389,31 @@ export default function Chat() {
 
   return (
     <>
-      {/* <div className="bg-gradient-to-b from-blue-0 to-blue-1"> */}
-      <div className="flex flex-col justify-center items-center bg-blue-00 h-screen max-w-5xl mx-auto px-4 relative py-32 z-10">
+      <div className="px-4 mx-auto flex flex-col max-w-5xl bottom-0">
         {!hideList && (
           <>
-            <p className="font-bold text-5xl pb-4">Your repositories</p>
-            <p className="font-extralight text-xl pb-4">
-              Choose a repository to prepare on
-            </p>
-          </>
-        )}
-        {!hideList && (
-          <>
-            <RepoList data={data} handleCallback={getSelectedRepo} />
-            <button
-              onClick={handleSubmit}
-              className="font-semibold text-md px-4 py-2 mt-6 bg-white-0 text-blue-0 rounded-md"
-            >
-              Submit
-            </button>
+            <div className="flex flex-col justify-center items-center bg-blue-00 h-screen my-10 mx-auto relative py-32 z-10">
+              <p className="font-bold text-5xl pb-4 whitespace-nowrap">
+                Your repositories
+              </p>
+              <p className="font-extralight text-xl pb-4">
+                Choose a repository to prepare on
+              </p>
+              <RepoList data={data} handleCallback={getSelectedRepo} />
+              <button
+                onClick={handleSubmit}
+                className="mt-10 bg-blue-2 px-3 py-3 rounded-xl text-white-1 font-medium text-xl hover:bg-blue-1 transition-bg-color duration-300"
+              >
+                Submit
+              </button>
+
+              {/* <button
+                onClick={handleSubmit}
+                className="font-semibold text-md px-4 py-2 mt-6 bg-white-0 text-blue-0 rounded-md"
+              >
+                Submit
+              </button> */}
+            </div>
           </>
         )}
         {hideList && (
@@ -456,26 +433,26 @@ export default function Chat() {
                   </div>
                 ))}
               </div>
-            </div>
-            <div>
-              <div className="static">
-                <div className="relative flex flex-col">
-                  <button
-                    onClick={handleSubmit}
-                    disabled={submit}
-                    className="absolute right-0 top-[3.9rem] bg-blue-2 text-white py-2 px-4 rounded-full mr-2 mt-2 z-10"
-                  >
-                    Submit
-                  </button>
-                  <textarea
-                    rows={4}
-                    name="comment"
-                    id="comment"
-                    placeholder="Send a message"
-                    className="w-full p-2 shadow-sm focus:ring-blue-3 z-15 resize-none focus:border-blue-3 block text-black sm:text-sm border-gray-300 rounded-md mt-10 overflow-visible"
-                    defaultValue={""}
-                    onChange={(e) => setUserInput(e.target.value)}
-                  />
+              <div>
+                <div className="static">
+                  <div className="relative flex flex-col">
+                    <button
+                      onClick={handleSubmit}
+                      disabled={submit}
+                      className="absolute right-0 top-[3.9rem] bg-blue-2 text-white py-2 px-4 rounded-full mr-2 mt-2 z-10"
+                    >
+                      Submit
+                    </button>
+                    <textarea
+                      rows={4}
+                      name="comment"
+                      id="comment"
+                      placeholder="Send a message"
+                      className="w-full p-2 shadow-sm focus:ring-blue-3 z-15 resize-none focus:border-blue-3 block text-black sm:text-sm border-gray-300 rounded-md mt-10 overflow-visible"
+                      defaultValue={""}
+                      onChange={(e) => setUserInput(e.target.value)}
+                    />
+                  </div>
                 </div>
               </div>
             </div>

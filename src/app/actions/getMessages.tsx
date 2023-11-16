@@ -35,18 +35,11 @@ const GetMessages = async (chatSlug: string, page: number) => {
 
   const currentPage = page;
 
-  // const getPageData = GetTotalMessages(chatSlug);
-  // const pageData = await getPageData;
-
-  // const pageSize = pageData.pageSize;
-  // const totalMessages = pageData.totalMessages;
-  // const totalPages = pageData.totalPages;
-
   const totalMessages = userMessagesCount + aiMessagesCount;
-  const pageSize = totalMessages / 2 ? 4 : 3;
+  const pageSize = totalMessages / 2 ? 4 : 3 && totalMessages === 2 ? 1 : 1;
   const totalPages = Math.ceil(totalMessages / pageSize);
 
-  // const maxPage = Math.min(totalPages, Math.max(currentPage + 5, 10));
+  console.log("totalMessages:", totalMessages);
 
   if (!page) {
     console.log("Page is missing in getMessages");

@@ -197,8 +197,8 @@ export default function Slug({ params }: { params: { slug: string } }) {
           <div className="flex flex-col-reverse max-h-xl">
             {userMessages?.map(
               (userMessage: MessagesData, index = +userMessage.id) => (
-                <div key={index} className="">
-                  <p className="px-4 py-6 bg-blue-0 text-white rounded-3xl my-2">
+                <div key={index}>
+                  <p className="px-4 py-6 bg-blue-0 text-white rounded-3xl">
                     {userMessage.messageContent}
                     {/* - {`${userMessage.createdAt}`} */}
                   </p>
@@ -215,7 +215,7 @@ export default function Slug({ params }: { params: { slug: string } }) {
             )}
             {messages.user?.map((userMessage: string, index) => (
               <div key={index}>
-                <p className="px-4 py-6 bg-blue-0 text-white rounded-3xl my-2">
+                <p className="px-4 py-6 bg-blue-0 text-white rounded-3xl">
                   {userMessage}
                 </p>
                 <p className="px-4 py-6 bg-blue-1 text-white rounded-3xl">

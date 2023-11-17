@@ -361,7 +361,7 @@ export default function Chat() {
   }, [chatSlug, router]);
 
   useEffect(() => {
-    if (currentOutput.length > 0 && clickCount !== 0) {
+    if (currentOutput.length > 0 && clickCount >= 2) {
       UpdateChat(userInput, currentOutput, chatSlug);
       setCurrentOutput("");
       setUserInput("");
@@ -379,6 +379,7 @@ export default function Chat() {
         await sendData();
       } else {
         await handleInputSubmit();
+        setClickCount((prevCount) => prevCount + 1);
       }
     } catch (error) {
       console.log("Error during submit:", error);
@@ -422,7 +423,7 @@ export default function Chat() {
               <div className="flex justify-start flex-col">
                 {messages.user?.map((userMessage: string, index) => (
                   <div key={index}>
-                    <p className="px-4 py-6 bg-blue-0 text-white rounded-3xl my-2">
+                    <p className="px-4 py-6 bg-blue-0 text-white rounded-3xl">
                       {userMessage}
                     </p>
                     <p className="px-4 py-6 bg-blue-1 text-white rounded-3xl">

@@ -8,8 +8,6 @@ const montserrat = Montserrat({
   variable: "--font-montserrat",
 });
 
-import Image from "next/image";
-
 export const Landing = () => {
   return (
     // <Suspense fallback={<LoadingComponent />}>
@@ -17,13 +15,13 @@ export const Landing = () => {
       <div className="flex flex-row min-h-screen items-center justify-center overflow-x-hidden">
         {/* <div className="flex flex-col-reverse lg:flex-row-reverse items-center gap-x-8 bg-gray-100 rounded-2xl m-6 md:m-0 p-10"> */}
         <div className="absolute lg:static max-w-md max-h-md flex flex-col items-center justify-center mx-10 my-20 lg:pl-40 sm:max-w-3xl">
-          <h2 className="text-4xl sm:text-5xl text-blue-3">
-            Lorem ipsum dolor sit amet consectetur adipisicing elit.
+          <h2 className="text-4xl sm:text-5xl text-blue-3 font-semibold">
+            Up your preparation to the next level with us
           </h2>
           <h3 className="mt-4 text-xl font-medium text-gray-200 sm:mt-3">
-            Lorem ipsum, dolor sit amet consectetur adipisicing elit. Sapiente
-            animi quod non! Ducimus dolores maiores autem, a laudantium,
-            corporis repellendus dolore esse corrupti.
+            Let our AI companion guide you through your projects, providing
+            smart questions and innovative solutions. Join thousands of users
+            who trust our platform.
           </h3>
           <button className="mt-10 bg-blue-2 px-3 py-3 rounded-xl text-white-1 font-medium text-xl hover:bg-blue-1 transition-bg-color duration-300">
             <a href="/chat">Start now</a>

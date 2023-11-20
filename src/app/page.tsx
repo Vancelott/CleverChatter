@@ -6,6 +6,8 @@ import getCurrentUser from "./actions/getCurrentUser";
 import { Landing } from "../../components/landing";
 import NavBar from "../../components/navBar";
 import { MessagesLanding } from "../../components/messagesLanding";
+import StatsLanding from "../../components/statsLanding";
+import { motion } from "framer-motion";
 
 export default function Home() {
   return (
@@ -13,14 +15,24 @@ export default function Home() {
       <div className="bg-blue-00">
         <NavBar />
         <Landing />
-        <div className="w-full mx-auto flex items-center justify-center">
-          <p className="text-6xl font-extrabold max-w-4xl text-center">
-            Getting ready for an interview has never been easier
-          </p>
-        </div>
-        <div className="bg-gradient-to-t from-blue-4 to-blue-3 mx-32 my-28 rounded-3xl">
+        <motion.div
+          initial={{ opacity: 0, translateY: 150 }}
+          animate={{ opacity: 1, translateY: 0 }}
+          whileInView="animate"
+          transition={{
+            delay: 0.7,
+          }}
+          viewport={{ once: true, amount: 0.3 }}
+        >
           <MessagesLanding />
-        </div>
+        </motion.div>
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.5 }}
+        >
+          <StatsLanding />
+        </motion.div>
       </div>
     </>
   );

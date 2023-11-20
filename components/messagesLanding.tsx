@@ -1,19 +1,19 @@
 "use client";
 import "src/app/globals.css";
 import { Montserrat } from "next/font/google";
-import { Variants, motion, useInView, stagger } from "framer-motion";
+import {
+  Variants,
+  motion,
+  useInView,
+  stagger,
+  useAnimation,
+} from "framer-motion";
 import { useEffect, useRef, useState } from "react";
-import { AnimatedText } from "./animatedText";
-
-const montserrat = Montserrat({
-  subsets: ["latin"],
-  display: "swap",
-  variable: "--font-montserrat",
-});
 
 export const MessagesLanding = () => {
-  // const ref = useRef(null);
-  // const isInView = useInView(ref, { amount: 0.5 });
+  const ref = useRef(null);
+  const isInView = useInView(ref, { amount: 0.15 });
+  const controls = useAnimation();
 
   const userMessage =
     "Hey, I'm working on a repository crawler project, and I need some interesting questions to test its capabilities. Can you help me out?";
@@ -23,32 +23,89 @@ export const MessagesLanding = () => {
   const userMessageArr = Array.from(userMessage);
   const aiMessageArr = Array.from(aiMessage);
 
-  // const [aiMessageArr, setAiMessageArr] = useState<string[]>([]);
+  useEffect(() => {
+    const show = () => {
+      controls.start({ opacity: 1, translateX: 0 });
+    };
 
-  // useEffect(() => {
-  //   setTimeout(() => {
-  //     const aiMessageArr = Array.from(aiMessage);
-  //     setAiMessageArr(aiMessageArr);
-  //   }, 4800);
-  // }, [aiMessage]);
+    if (isInView) {
+      setTimeout(() => {
+        show();
+      }, 1100);
+    } else {
+      controls.start("hidden");
+    }
+  }, [controls, isInView]);
+
+  // const words: string[] = [];
+  // const test = (index: number) => {
+  //   while (aiMessageArr[index]) {
+  //     words.push(aiMessageArr[index] + aiMessageArr[index++]);
+  //   }
+
+  //   return;
+  // };
+  // test(0);
 
   return (
     // <Suspense fallback={<LoadingComponent />}>
-    <div className="xl:px-28">
-      <div className="flex flex-row gap-4 min-h-screen items-center justify-between overflow-x-hidden py-52">
-        {/* <div className="flex flex-col-reverse lg:flex-row-reverse items-center gap-x-8 bg-gray-100 rounded-2xl m-6 md:m-0 p-10"> */}
-        {aiMessageArr.length > 0 && (
-          <div className="w-full px-4 py-6 bg-blue-0 text-white rounded-3xl text-xl place-self-end">
+    // <motion.div
+    //   initial={{ opacity: 0, translateY: 150 }}
+    //   animate={{ opacity: 1, translateY: 0 }}
+    //   whileInView="animate"
+    //   transition={{
+    //     delay: 0.7,
+    //   }}
+    //   viewport={{ once: true }}
+    // >
+    <div>
+      <div className="w-full mx-auto flex items-center justify-center">
+        <p className="text-3xl mx-8 lg:mx-0 lg:text-6xl font-extrabold max-w-4xl text-center">
+          Getting ready for an interview has never been easier
+        </p>
+      </div>
+      <div className="bg-diagonal-strips bg-blue-4 mx-8 lg:mx-32 my-6 lg:my-28 rounded-3xl xl:px-28 ">
+        <div className="flex flex-col-reverse lg:flex-row gap-16 md:gap-2 py-40 md:py-44 mx-6 lg:py-20 xl:py-20 2xl:py-40 min-h-screen items-center justify-between overflow-x-hidden">
+          {/* <div className="flex flex-col-reverse lg:flex-row-reverse items-center gap-x-8 bg-gray-100 rounded-2xl m-6 md:m-0 p-10"> */}
+          <motion.div
+            initial={{ opacity: 0, translateX: 100 }}
+            animate={controls}
+            transition={{
+              delay: 0.05,
+            }}
+            viewport={{
+              once: true,
+            }}
+            className="w-full px-4 py-6 bg-blue-0 text-white rounded-3xl text-xl place-self-end"
+          >
             {aiMessageArr.map((char, index) => (
               <motion.span
+                ref={ref}
                 key={index}
                 className="inline-block whitespace-break-spaces"
                 initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
+                animate={controls}
                 transition={{
-                  duration: 0.035,
-                  delay: index * 0.035,
+                  duration: 0.015,
+                  delay: index * 0.015,
                 }}
+                // whileInView="animate"
+                viewport={{
+                  once: true,
+                }}
+              >
+                {char}
+              </motion.span>
+            ))}
+          </motion.div>
+          <div className="w-full px-4 py-6 bg-blue-1 text-white rounded-3xl text-xl place-self-start">
+            {userMessageArr.map((char, index) => (
+              <motion.span
+                key={index}
+                className="inline-block whitespace-break-spaces "
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.015, delay: index * 0.015 }}
                 whileInView="animate"
                 viewport={{
                   once: true,
@@ -58,32 +115,16 @@ export const MessagesLanding = () => {
               </motion.span>
             ))}
           </div>
-        )}
-        <div className="w-full px-4 py-6 bg-blue-1 text-white rounded-3xl text-xl place-self-start">
-          {userMessageArr.map((char, index) => (
-            <motion.span
-              key={index}
-              className="inline-block whitespace-break-spaces"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.035, delay: index * 0.035 }}
-              whileInView="animate"
-              viewport={{
-                once: true,
-              }}
-            >
-              {char}
-            </motion.span>
-          ))}
         </div>
-      </div>
-      {/* <Image
+        {/* <Image
               src={aboutPhoto}
               className="h-[26rem] sm:h-[32rem] w-[32rem] object-cover rounded-lg relative"
               alt="Photo for about page"
             /> */}
-      {/* </div> */}
+        {/* </div> */}
+      </div>
     </div>
+    // </motion.div>
     // </Suspense>
   );
 };

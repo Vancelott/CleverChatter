@@ -12,7 +12,7 @@ import { useEffect, useRef, useState } from "react";
 
 export const MessagesLanding = () => {
   const ref = useRef(null);
-  const isInView = useInView(ref, { amount: 0.15 });
+  const isInView = useInView(ref, { once: true });
   const controls = useAnimation();
 
   const userMessage =
@@ -47,34 +47,45 @@ export const MessagesLanding = () => {
   // };
   // test(0);
 
+  useEffect(() => {
+    console.log("isInView", isInView);
+  }, [isInView]);
+
+  // const fadeInVariants = {
+  //   initial: {
+  //     opacity: 0,
+  //   },
+  //   animate: {
+  //     opacity: 1,
+  //   },
+  // };
+
   return (
     // <Suspense fallback={<LoadingComponent />}>
-    // <motion.div
-    //   initial={{ opacity: 0, translateY: 150 }}
-    //   animate={{ opacity: 1, translateY: 0 }}
-    //   whileInView="animate"
-    //   transition={{
-    //     delay: 0.7,
-    //   }}
-    //   viewport={{ once: true }}
-    // >
-    <div>
+    <motion.div
+      initial={{ opacity: 0 }}
+      whileInView={{ opacity: 1 }}
+      viewport={{ once: true, amount: 0.15 }}
+    >
       <div className="w-full mx-auto flex items-center justify-center">
         <p className="text-3xl mx-8 lg:mx-0 lg:text-6xl font-extrabold max-w-4xl text-center">
           Getting ready for an interview has never been easier
         </p>
       </div>
-      <div className="bg-diagonal-strips bg-blue-4 mx-8 lg:mx-32 my-6 lg:my-28 rounded-3xl xl:px-28 ">
-        <div className="flex flex-col-reverse lg:flex-row gap-16 md:gap-2 py-40 md:py-44 mx-6 lg:py-20 xl:py-20 2xl:py-40 min-h-screen items-center justify-between overflow-x-hidden">
+      <motion.div
+        // variants={fadeInVariants}
+        // initial={{ opacity: 0 }}
+        // whileInView={{ opacity: 1 }}
+        // viewport={{ once: true, amount: 0.5 }}
+        className="bg-diagonal-strips bg-blue-4 mx-8 lg:mx-32 my-6 lg:my-12 rounded-3xl xl:px-28"
+      >
+        <div className="flex flex-col-reverse lg:flex-row gap-16 md:gap-2 py-40 md:py-44 mx-6 lg:py-20 xl:py-20 2xl:py-52 min-h-screen items-center justify-between overflow-x-hidden">
           {/* <div className="flex flex-col-reverse lg:flex-row-reverse items-center gap-x-8 bg-gray-100 rounded-2xl m-6 md:m-0 p-10"> */}
           <motion.div
             initial={{ opacity: 0, translateX: 100 }}
             animate={controls}
             transition={{
               delay: 0.05,
-            }}
-            viewport={{
-              once: true,
             }}
             className="w-full px-4 py-6 bg-blue-0 text-white rounded-3xl text-xl place-self-end"
           >
@@ -122,9 +133,8 @@ export const MessagesLanding = () => {
               alt="Photo for about page"
             /> */}
         {/* </div> */}
-      </div>
-    </div>
-    // </motion.div>
+      </motion.div>
+    </motion.div>
     // </Suspense>
   );
 };

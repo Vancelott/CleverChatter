@@ -1,19 +1,26 @@
 "use client";
 
 import GetMessages from "@/app/actions/getMessages";
-import { use, useCallback, useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { HfInference } from "@huggingface/inference";
 import UpdateChat from "@/app/actions/updateChat";
 import { MessagesData, CurrentMessages } from "../../types";
 import GetTotalMessages from "@/app/actions/getTotalMessages";
 import { useInView } from "react-intersection-observer";
 import toast, { Toaster } from "react-hot-toast";
+import GetChatCreator from "@/app/actions/getChatCreator";
 
 const hfToken = process.env.HF_ACCESS_TOKEN;
 
 const hf = new HfInference(process.env.HF_ACCESS_TOKEN);
 
-export default function Slug({ params }: { params: { slug: string } }) {
+export default function Slug({
+  params,
+  isCreator,
+}: {
+  params: { slug: string };
+  isCreator: boolean;
+}) {
   const { ref: myRef, inView: entryVisibility, entry } = useInView();
 
   const [chatSlug] = useState(params.slug);
@@ -24,6 +31,7 @@ export default function Slug({ params }: { params: { slug: string } }) {
   const [currentOutput, setCurrentOutput] = useState("");
   const [lastOutput, setLastOutput] = useState<string[]>([""]);
   const [submit, setSubmit] = useState(false);
+  // const [isCreator, setIsCreator] = useState(false);
 
   const [messages, setMessages] = useState<CurrentMessages>({
     ai: [],
@@ -31,7 +39,6 @@ export default function Slug({ params }: { params: { slug: string } }) {
   });
 
   const [page, setPage] = useState(1);
-  // const [totalPages, setTotalPages] = useState(1);
   const [prevPage, setPrevPage] = useState(1);
   const [totalMessages, setTotalMessages] = useState<number>(0);
 
@@ -40,13 +47,18 @@ export default function Slug({ params }: { params: { slug: string } }) {
 
   const pageSize = totalMessages / 2 ? 4 : 3;
   const totalPages = Math.ceil(totalMessages! / pageSize);
-  // const maxPage = Math.min(totalPages, Math.max(page + 5, 10));
 
   useEffect(() => {
     GetTotalMessages(chatSlug).then((data) => {
       setTotalMessages(data);
-      // setTotalPages(data.totalPages);
     });
+    // const getCreator = async () => {
+    //   const chatCreator = await GetChatCreator();
+    //   if (chatCreator === true) {
+    //     setIsCreator(true);
+    //   }
+    // };
+    // getCreator();
   }, [chatSlug]);
 
   const handleInputSubmit = async () => {
@@ -72,6 +84,7 @@ export default function Slug({ params }: { params: { slug: string } }) {
         },
         {
           use_cache: false,
+          wait_for_model: true,
         }
       ))
         if (output.token.text !== "<|endoftext|>") {
@@ -104,11 +117,6 @@ export default function Slug({ params }: { params: { slug: string } }) {
       } catch (error) {
         console.log("Error during submit:", error);
       } finally {
-        // console.log("Running UpdateChat.");
-        // setCurrentOutput("");
-        // setTimeout(() => {
-        //   UpdateChat(userInput, currentOutput, chatSlug);
-        // }, 5000);
         setSubmit(false);
       }
     } else {
@@ -191,49 +199,56 @@ export default function Slug({ params }: { params: { slug: string } }) {
 
   return (
     <>
-      <div className="px-4 mx-auto flex flex-col max-w-5xl bottom-0 ">
+      <div className="w-full h-screen px-4 mx-auto flex flex-col max-w-5xl my-6">
         <div className="flex justify-start flex-col">
-          <div ref={myRef} className=""></div>
-          <div className="flex flex-col-reverse max-h-xl">
-            {userMessages?.map(
-              (userMessage: MessagesData, index = +userMessage.id) => (
+          <div ref={myRef}></div>
+          <div className="flex flex-col">
+            <div className="flex flex-col-reverse">
+              {userMessages?.map(
+                (userMessage: MessagesData, index = +userMessage.id) => (
+                  <div key={index}>
+                    <p className="px-4 py-6 bg-blue-0 text-white rounded-3xl my-6">
+                      {userMessage.messageContent}
+                    </p>
+                    <p className="px-4 py-6 bg-blue-1 text-white rounded-3xl">
+                      {aiMessages &&
+                        aiMessages[index] &&
+                        aiMessages[index].messageContent}
+                    </p>
+                  </div>
+                )
+              )}
+            </div>
+            {/* {userMessages!?.length > 0 && */}
+            <div className="flex flex-col">
+              {messages.user?.map((userMessage: string, index) => (
                 <div key={index}>
-                  <p className="px-4 py-6 bg-blue-0 text-white rounded-3xl">
-                    {userMessage.messageContent}
-                    {/* - {`${userMessage.createdAt}`} */}
+                  <p className="px-4 py-6 bg-blue-0 text-white rounded-3xl my-6">
+                    {userMessage}
                   </p>
                   <p className="px-4 py-6 bg-blue-1 text-white rounded-3xl">
-                    {aiMessages &&
-                      aiMessages[index] &&
-                      aiMessages[index].messageContent}
-                    {/* {aiMessages &&
-                      aiMessages[index] &&
-                      `${aiMessages[index].createdAt}`} */}
+                    {messages.ai[index]
+                      ? messages.ai && messages.ai[index]
+                      : lastOutput}
                   </p>
                 </div>
-              )
-            )}
-            {messages.user?.map((userMessage: string, index) => (
-              <div key={index}>
-                <p className="px-4 py-6 bg-blue-0 text-white rounded-3xl">
-                  {userMessage}
-                </p>
-                <p className="px-4 py-6 bg-blue-1 text-white rounded-3xl">
-                  {messages.ai[index]
-                    ? messages.ai && messages.ai[index]
-                    : lastOutput}
-                </p>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
         <div>
-          <div className="static">
+          <div className="static mb-16">
             <div className="relative flex flex-col">
               <button
-                onClick={handleSubmit}
+                onClick={() => {
+                  submit ? handleSubmit : null;
+                }}
                 disabled={submit}
-                className="absolute right-0 top-[3.9rem] bg-blue-2 text-white py-2 px-4 rounded-full mr-2 mt-2 z-10"
+                className={`absolute right-0 top-[3.9rem] bg-blue-2 text-white py-2 px-4 rounded-full mr-2 mt-2 z-10 ${
+                  submit || !isCreator
+                    ? "opacity-90 bg-blue-4 cursor-not-allowed"
+                    : ""
+                }`}
               >
                 Submit
               </button>
@@ -241,9 +256,14 @@ export default function Slug({ params }: { params: { slug: string } }) {
                 rows={4}
                 name="comment"
                 id="comment"
+                value={userInput}
+                disabled={submit || !isCreator}
                 placeholder="Send a message"
-                className="w-full p-2 shadow-sm focus:ring-blue-3 z-15 resize-none focus:border-blue-3 block text-black sm:text-sm border-gray-300 rounded-md mt-10 overflow-visible"
-                defaultValue={""}
+                className={`w-full p-2 shadow-sm focus:ring-blue-3 z-15 resize-none focus:border-blue-3 block text-black sm:text-sm border-gray-300 rounded-md mt-10 overflow-visible ${
+                  submit || !isCreator
+                    ? "bg-slate-200 opacity-80 cursor-not-allowed"
+                    : ""
+                }`}
                 onChange={(e) => setUserInput(e.target.value)}
               />
             </div>

@@ -8,7 +8,7 @@ const GetAllChats = async () => {
     const currentUser = await getCurrentUser();
 
     if (!currentUser) {
-      console.log("No currentUser found.");
+      console.log("No currentUser found in GetAllChats.");
       return null;
     }
 
@@ -18,7 +18,6 @@ const GetAllChats = async () => {
           equals: currentUser.id,
         },
       },
-      take: 50,
     });
 
     // console.log(allChats);

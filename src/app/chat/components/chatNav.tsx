@@ -26,6 +26,7 @@ import {
   eachDayOfInterval,
   isAfter,
   isBefore,
+  isEqual,
   isToday,
   subDays,
 } from "date-fns";
@@ -77,11 +78,12 @@ export const ChatNav = () => {
     setOlderChats([]);
 
     chats?.forEach((chat) => {
-      if (isToday(chat.createdAt)) {
+      const { createdAt } = chat;
+      if (isToday(createdAt)) {
         setChatsToday((prev) => [...prev, chat]);
-      } else if (isBefore(dateYesterday, chat.createdAt)) {
+      } else if (isBefore(dateYesterday, createdAt)) {
         setChatsYesterday((prev) => [...prev, chat]);
-      } else if (isBefore(datePreviousSevenDays, chat.createdAt)) {
+      } else if (isBefore(datePreviousSevenDays, createdAt)) {
         setChatsPreviousSevenDays((prev) => [...prev, chat]);
       } else {
         setOlderChats((prev) => [...prev, chat]);
@@ -117,15 +119,16 @@ export const ChatNav = () => {
             className="mt-5 flex-1 px-2 bg-gray-800 space-y-1"
             aria-label="Sidebar"
           >
-            {chats.length === 0 && (
-              <div className="flex items-center justify-center px-4 w-full h-full">
-                <ChatBubbleLeftRightIcon className="h-16 w-16 text-gray-700 relative mb-24" />
-                <p className="text-center text-gray-300 font-medium text-md absolute px-2">
-                  Your chat history is empty. Start a new conversation to see it
-                  here!
-                </p>
-              </div>
-            )}
+            {chats?.length === 0 ||
+              (!chats && (
+                <div className="flex items-center justify-center px-4 w-full h-full">
+                  <ChatBubbleLeftRightIcon className="h-16 w-16 text-gray-700 relative mb-24" />
+                  <p className="text-center text-gray-300 font-medium text-md absolute px-2">
+                    Your chat history is empty. Start a new conversation to see
+                    it here!
+                  </p>
+                </div>
+              ))}
             {chatsToday.length > 0 && (
               <div>
                 <p className="text-white text-sm font-semibold px-1">Today</p>

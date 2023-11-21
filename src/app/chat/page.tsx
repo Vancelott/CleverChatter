@@ -195,22 +195,11 @@ export default function Chat() {
       setLastOutput([]);
       for await (const output of hf.textGenerationStream(
         {
-          // model: "google/flan-t5-xxl",
           model: "tiiuae/falcon-7b-instruct",
-          // inputs: `Can you analyze some code for me? The code will be encoded, you just have to decode it and generate questions.`,
-          // inputs: `Q: I will provide you with some code encoded in base64 at the end of this paragraph. Your task is to decode the code to basic text (I suggest utf-8), analyze the code itself and then generate 10 interview questions based on it. Code: ${mappedContent}`,
-          // inputs: `Q: Decode the code, generate 10 interview questions based on it and provide them to me in plain text. Code: ${mappedContent}`,
-          // inputs: `Imagine that you are an interviewer and you have to ask questions about this project. What would these questions be?: ${mappedContent}`,
-          // best starter input so far inputs:
-          //   "Hi, can you generate questions about a coding specific project, if I provide you with all the details? Disclaimer: there's no need to generate questions at the moment, please wait for me to send the code in the next message.",
-
-          // this input generates questions too
           inputs: firstInput,
-          // inputs: `At the end of this paragraph is a function from my project. Ask me a 1-2 questions about it - ${testFunction}`,
           parameters: {
             max_new_tokens: 1024,
             return_full_text: false,
-            // num_return_sequences: 2,
             truncate: 1000,
             top_k: 50,
             repetition_penalty: 1.2,
@@ -221,6 +210,7 @@ export default function Chat() {
         },
         {
           use_cache: false,
+          wait_for_model: true,
         }
       ))
         if (output.token.text !== "<|endoftext|>") {
@@ -242,38 +232,6 @@ export default function Chat() {
     } catch (error) {
       console.log(error);
     }
-    // finally {
-    //   for await (const output of hf.textGenerationStream(
-    //     {
-    //       // model: "google/flan-t5-xxl",
-    //       model: "tiiuae/falcon-7b-instruct",
-    //       // best input, generates actual questions
-    //       // inputs: `Generate 10 technical interview questions, about the code, based on this project: ${contentData}`,
-    //       // inputs: `Imagine that you are an interviewer and I'm the interviewee. Ask me questions about this code, as if you were interviewing me: ${contentData}`,
-    //       // inputs: `Ask me questions about this code, as if you were interviewing me: ${contentData}`,
-    //       // inputs: `Analyze the code at the end of this paragraph and ask me questions it, so you can better understand its functionality. For example, you can ask me what's the purpose of a specific function etc.: ${contentData}`,
-    //       // inputs: `Analyze the code at the end of this paragraph and generate 10 questions which I might get asked about its functionality or the overall project: ${mappedContent}`,
-    //       // inputs: `Analyze the code at the end of this paragraph and generate 10 questions which I might get asked about its functionality or the overall project. In addition to that, pick 2 functions and generate a question about them specifically: ${mappedContent}`,
-    //       parameters: {
-    //         max_new_tokens: 2500,
-    //         return_full_text: false,
-    //         truncate: 1000,
-    //         top_k: 50,
-    //         repetition_penalty: 1.2,
-    //         top_p: 0.95,
-    //         temperature: 0.9,
-    //       },
-    //     },
-    //     {
-    //       use_cache: false,
-    //     }
-    //   )) {
-    //     const outputData = [output.token.text];
-    //     setOutput((prevState) => [...prevState, ...outputData]);
-    //     console.log(output);
-    //   }
-    // }
-
     return currentOutput;
   };
 
@@ -332,7 +290,6 @@ export default function Chat() {
   const getSelectedRepo = (name: string) => {
     const data = name;
     setSelectedChildRepo(data);
-    // return selectedChildRepo;
   };
 
   // creates chat once the full output from the ai is available
@@ -407,13 +364,6 @@ export default function Chat() {
               >
                 Submit
               </button>
-
-              {/* <button
-                onClick={handleSubmit}
-                className="font-semibold text-md px-4 py-2 mt-6 bg-white-0 text-blue-0 rounded-md"
-              >
-                Submit
-              </button> */}
             </div>
           </>
         )}
@@ -423,7 +373,7 @@ export default function Chat() {
               <div className="flex justify-start flex-col">
                 {messages.user?.map((userMessage: string, index) => (
                   <div key={index}>
-                    <p className="px-4 py-6 bg-blue-0 text-white rounded-3xl">
+                    <p className="px-4 py-6 bg-blue-0 text-white rounded-3xl my-6">
                       {userMessage}
                     </p>
                     <p className="px-4 py-6 bg-blue-1 text-white rounded-3xl">
@@ -440,7 +390,9 @@ export default function Chat() {
                     <button
                       onClick={handleSubmit}
                       disabled={submit}
-                      className="absolute right-0 top-[3.9rem] bg-blue-2 text-white py-2 px-4 rounded-full mr-2 mt-2 z-10"
+                      className={`absolute right-0 top-[3.9rem] bg-blue-2 text-white py-2 px-4 rounded-full mr-2 mt-2 z-10 ${
+                        submit ? "opacity-90 bg-blue-4 cursor-not-allowed" : ""
+                      }`}
                     >
                       Submit
                     </button>
@@ -448,9 +400,14 @@ export default function Chat() {
                       rows={4}
                       name="comment"
                       id="comment"
+                      value={userInput}
+                      disabled={submit}
                       placeholder="Send a message"
-                      className="w-full p-2 shadow-sm focus:ring-blue-3 z-15 resize-none focus:border-blue-3 block text-black sm:text-sm border-gray-300 rounded-md mt-10 overflow-visible"
-                      defaultValue={""}
+                      className={`w-full p-2 shadow-sm focus:ring-blue-3 z-15 resize-none focus:border-blue-3 block text-black sm:text-sm border-gray-300 rounded-md mt-10 overflow-visible ${
+                        submit
+                          ? "bg-slate-200 opacity-80 cursor-not-allowed"
+                          : ""
+                      }`}
                       onChange={(e) => setUserInput(e.target.value)}
                     />
                   </div>

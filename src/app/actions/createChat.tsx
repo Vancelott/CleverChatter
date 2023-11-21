@@ -80,7 +80,7 @@ const CreateChat = async (
       },
     });
 
-    // console.log(newChat);
+    console.log(newConversation);
     // console.log(newMessage);
     return newChat;
   } catch (error: any) {

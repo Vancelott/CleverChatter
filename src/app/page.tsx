@@ -15,24 +15,8 @@ export default function Home() {
       <div className="bg-blue-00">
         <NavBar />
         <Landing />
-        <motion.div
-          initial={{ opacity: 0, translateY: 150 }}
-          animate={{ opacity: 1, translateY: 0 }}
-          whileInView="animate"
-          transition={{
-            delay: 0.7,
-          }}
-          viewport={{ once: true, amount: 0.3 }}
-        >
-          <MessagesLanding />
-        </motion.div>
-        <motion.div
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, amount: 0.5 }}
-        >
-          <StatsLanding />
-        </motion.div>
+        <MessagesLanding />
+        <StatsLanding />
       </div>
     </>
   );

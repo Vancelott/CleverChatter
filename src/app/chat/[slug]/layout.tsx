@@ -1,19 +1,23 @@
+import GetChatCreator from "@/app/actions/getChatCreator";
+import getCurrentUser from "@/app/actions/getCurrentUser";
 import { Toaster } from "react-hot-toast";
+import Slug from "./page";
+import { Suspense } from "react";
 
 export default async function SlugLayout({
   children,
-  searchParams,
+  params,
 }: {
   children: React.ReactNode;
-  searchParams: {
-    slug: string;
-  };
+  params: { slug: string };
 }) {
-  const slug = searchParams?.slug;
+  const slug = params?.slug;
+
+  const isCreator = await GetChatCreator(slug);
 
   return (
-    <div className="h-max w-full px-4 md:px-24 py-12 bg-blue-00">
-      {children}
+    <div className="h-screen w-full px-4 md:px-24 py-12 bg-blue-00 overflow-auto">
+      <Slug isCreator={isCreator!} params={{ slug }} />
     </div>
   );
 }

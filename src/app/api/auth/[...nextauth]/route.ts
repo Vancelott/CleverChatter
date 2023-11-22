@@ -1,10 +1,15 @@
 // import bcrypt from "bcrypt";
-import NextAuth, { AuthOptions } from "next-auth";
+import { AuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GitHubProvider from "next-auth/providers/github";
 
 import { PrismaClient } from "@prisma/client";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
+
+import NextAuth, { User as NextAuthUser } from "next-auth";
+interface NextAuthUserWithStringId extends NextAuthUser {
+  id: string;
+}
 
 const prisma = new PrismaClient();
 
@@ -13,46 +18,18 @@ const prisma = new PrismaClient();
 export const authOptions: AuthOptions = {
   adapter: PrismaAdapter(prisma),
   providers: [
-    CredentialsProvider({
-      name: "Credentials",
-      credentials: {
-        email: { label: "email", type: "text" },
-        password: { label: "password", type: "password" },
-      },
-      async authorize(credentials) {
-        if (!credentials?.email || !credentials.password) {
-          throw new Error("Invalid or missing credentials.");
-        }
-
-        const user = await prisma.user.findUnique({
-          where: {
-            email: credentials.email,
-          },
-        });
-
-        if (!user) {
-          throw new Error(
-            "Email address not found. Please check your email or sign up for a new account."
-          );
-        }
-
-        // const isPasswordCorrect = await bcrypt.compare(
-        //   credentials.password,
-        //   user.hashedPassword
-        // );
-
-        // if (!isPasswordCorrect) {
-        //   throw new Error(
-        //     "Invalid password. Please make sure you entered the correct password for your account."
-        //   );
-        // }
-
-        return user;
-      },
-    }),
     GitHubProvider({
       clientId: process.env.GITHUB_ID!,
       clientSecret: process.env.GITHUB_SECRET!,
+      profile(profile) {
+        return {
+          id: profile.id.toString(),
+          name: profile.name || profile.login,
+          email: profile.email,
+          image: profile.avatar_url,
+          username: profile.login,
+        } as NextAuthUserWithStringId;
+      },
     }),
   ],
   debug: process.env.NODE_ENV === "development",

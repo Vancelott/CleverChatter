@@ -1,8 +1,9 @@
 "use client";
 
-import { useSession } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 const NavBar = () => {
   const {
@@ -12,6 +13,8 @@ const NavBar = () => {
 
   const [sessionStatus, setSessionStatus] = useState(false);
 
+  const router = useRouter();
+
   useEffect(() => {
     if (status === "authenticated") {
       setSessionStatus(true);
@@ -19,6 +22,12 @@ const NavBar = () => {
   }, [status]);
 
   const [hidden, setHidden] = useState(true);
+
+  // temporary
+  const handleLogout = () => {
+    signOut();
+    router.push("/");
+  };
 
   return (
     <nav className="z-20">
@@ -43,6 +52,11 @@ const NavBar = () => {
           <div className="hidden md:flex space-x-6 items-center font-medium">
             {!sessionStatus && <div>Sign In</div>}
             {sessionStatus && <p>Signed in</p>}
+            {sessionStatus && (
+              <button onClick={handleLogout} className="cursor-pointer">
+                Log out
+              </button>
+            )}
             <div className="text-blue-3 font-semibold">Register</div>
           </div>
           {/* Mobile menu button */}

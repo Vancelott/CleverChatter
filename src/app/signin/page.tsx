@@ -7,6 +7,7 @@ import {
 // import { redirect } from 'next/navigation';
 import { useRouter } from "next/navigation";
 import { useState, FC, Suspense } from "react";
+import toast from "react-hot-toast";
 // import { XCircleIcon, EyeIcon } from "@heroicons/react/20/solid";
 // import LoadingComponent from "@/app/signin/loading";
 
@@ -64,6 +65,21 @@ export default function SignIn() {
       redirect: true,
       callbackUrl: "/",
     });
+  };
+
+  const handleGithub = () => {
+    setIsLoading(true);
+    signIn("github", { redirect: false })
+      .then((callback) => {
+        if (callback?.error) {
+          toast.error("Invalid credentials");
+        }
+
+        if (callback?.ok && !callback?.error) {
+          toast.success("Logged in!");
+        }
+      })
+      .finally(() => setIsLoading(false));
   };
 
   return (
@@ -167,6 +183,15 @@ export default function SignIn() {
                 } flex justify-center rounded-md bg-blue-0 px-3 py-1.5 text-sm font-medium leading-6 text-white shadow-sm hover:bg-orange-3 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600`}
               >
                 Log in with Test account
+              </button>
+              <button
+                onClick={handleGithub}
+                disabled={isLoading}
+                className={`${
+                  isLoading ? "cursor-not-allowed opacity-80" : ""
+                } flex justify-center rounded-md bg-blue-0 px-3 py-1.5 text-sm font-medium leading-6 text-white shadow-sm hover:bg-orange-3 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600`}
+              >
+                Github Login
               </button>
             </div>
             <p className="mt-10 text-center text-sm text-gray-500">

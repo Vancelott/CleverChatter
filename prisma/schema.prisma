@@ -37,6 +37,14 @@ model Session {
     @@map("sessions")
 }
 
+model VerificationToken {
+  id String  @id @default(auto()) @map("_id") @db.ObjectId
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([id, token])
+  @@map("verificationtokens")
+}
 enum UserRole {
     USER
     ADMIN
@@ -56,11 +64,11 @@ model Comment {
 
 model User {
     id             String    @id @default(auto()) @map("_id") @db.ObjectId
-    email          String    @unique
+    email          String?    @unique
     emailVerified  DateTime? @map("email_verified")
-    username       String    @unique
+    username       String?    @unique
     name           String?
-    hashedPassword String
+    hashedPassword String?
     chats          Chat[]
     createdAt      DateTime  @default(now())
     updatedAt      DateTime  @updatedAt

@@ -31,7 +31,7 @@ export const MessagesLanding = () => {
     if (isInView) {
       setTimeout(() => {
         show();
-      }, 1100);
+      }, 1600);
     } else {
       controls.start("hidden");
     }
@@ -46,19 +46,6 @@ export const MessagesLanding = () => {
   //   return;
   // };
   // test(0);
-
-  useEffect(() => {
-    console.log("isInView", isInView);
-  }, [isInView]);
-
-  // const fadeInVariants = {
-  //   initial: {
-  //     opacity: 0,
-  //   },
-  //   animate: {
-  //     opacity: 1,
-  //   },
-  // };
 
   return (
     // <Suspense fallback={<LoadingComponent />}>
@@ -80,7 +67,6 @@ export const MessagesLanding = () => {
         className="bg-diagonal-strips bg-blue-4 mx-8 lg:mx-32 my-6 lg:my-12 rounded-3xl xl:px-28"
       >
         <div className="flex flex-col-reverse lg:flex-row gap-16 md:gap-2 py-40 md:py-44 mx-6 lg:py-20 xl:py-20 2xl:py-52 min-h-screen items-center justify-between overflow-x-hidden">
-          {/* <div className="flex flex-col-reverse lg:flex-row-reverse items-center gap-x-8 bg-gray-100 rounded-2xl m-6 md:m-0 p-10"> */}
           <motion.div
             initial={{ opacity: 0, translateX: 100 }}
             animate={controls}
@@ -115,9 +101,9 @@ export const MessagesLanding = () => {
                 key={index}
                 className="inline-block whitespace-break-spaces "
                 initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
+                // animate={{ opacity: 1 }}
                 transition={{ duration: 0.015, delay: index * 0.015 }}
-                whileInView="animate"
+                whileInView={{ opacity: 1 }}
                 viewport={{
                   once: true,
                 }}

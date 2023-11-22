@@ -78,12 +78,12 @@ export const ChatNav = () => {
     setOlderChats([]);
 
     chats?.forEach((chat) => {
-      const { createdAt } = chat;
-      if (isToday(createdAt)) {
+      const { updatedAt } = chat;
+      if (isToday(updatedAt)) {
         setChatsToday((prev) => [...prev, chat]);
-      } else if (isBefore(dateYesterday, createdAt)) {
+      } else if (isBefore(dateYesterday, updatedAt)) {
         setChatsYesterday((prev) => [...prev, chat]);
-      } else if (isBefore(datePreviousSevenDays, createdAt)) {
+      } else if (isBefore(datePreviousSevenDays, updatedAt)) {
         setChatsPreviousSevenDays((prev) => [...prev, chat]);
       } else {
         setOlderChats((prev) => [...prev, chat]);
@@ -114,21 +114,26 @@ export const ChatNav = () => {
           hidden ? "hidden" : "flex"
         } flex-col h-full min-w-[288px] bg-gray-800 fixed z-40 transition-all duration-1000 delay-500`}
       >
-        <div className="flex flex-col my-auto pt-2 pb-4 hover:overflow-y-scroll overflow-hidden w-72">
+        <div
+          className={`flex flex-col pt-2 pb-4 hover:overflow-y-scroll overflow-hidden w-72 ${
+            chats?.length === 0
+              ? "my-auto"
+              : "items-start justify-start mb-auto"
+          }`}
+        >
           <nav
             className="mt-5 flex-1 px-2 bg-gray-800 space-y-1"
             aria-label="Sidebar"
           >
-            {chats?.length === 0 ||
-              (!chats && (
-                <div className="flex items-center justify-center px-4 w-full h-full">
-                  <ChatBubbleLeftRightIcon className="h-16 w-16 text-gray-700 relative mb-24" />
-                  <p className="text-center text-gray-300 font-medium text-md absolute px-2">
-                    Your chat history is empty. Start a new conversation to see
-                    it here!
-                  </p>
-                </div>
-              ))}
+            {chats?.length === 0 && (
+              <div className="flex items-center justify-center px-4 w-full h-full">
+                <ChatBubbleLeftRightIcon className="h-16 w-16 text-gray-700 relative mb-24" />
+                <p className="text-center text-gray-300 font-medium text-md absolute px-2">
+                  Your chat history is empty. Start a new conversation to see it
+                  here!
+                </p>
+              </div>
+            )}
             {chatsToday.length > 0 && (
               <div>
                 <p className="text-white text-sm font-semibold px-1">Today</p>

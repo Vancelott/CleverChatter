@@ -132,7 +132,6 @@ export default function Chat() {
 
   const fetchContent = async (owner: string, repo: string) => {
     const contentDataArray: Array<{ name: string; content: string }> = [];
-    // console.log("repoData in fetchContent:", repoData);
     try {
       console.log("repoData in fetchContent:", repoData);
       for await (const item of repoData) {
@@ -330,7 +329,7 @@ export default function Chat() {
       setSubmit(true);
       setHideList(true);
       if (clickCount === 0) {
-        await fetchItemPaths(`${username}`, `${selectedChildRepo}`, "src/app");
+        await fetchItemPaths(`${username}`, `${selectedChildRepo}`, "");
         await fetchContent(`${username}`, `${selectedChildRepo}`);
         await decodeContent();
         await sendData();

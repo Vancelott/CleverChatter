@@ -199,7 +199,7 @@ export default function Slug({
 
   return (
     <>
-      <div className="w-full h-screen px-4 mx-auto flex flex-col max-w-5xl my-6">
+      <div className="w-full h-screen px-4 mx-auto flex flex-col justify-between max-w-5xl my-6">
         <div className="flex justify-start flex-col">
           <div ref={myRef}></div>
           <div className="flex flex-col">
@@ -241,7 +241,7 @@ export default function Slug({
             <div className="relative flex flex-col">
               <button
                 onClick={() => {
-                  submit ? handleSubmit : null;
+                  submit ? null : handleSubmit();
                 }}
                 disabled={submit}
                 className={`absolute right-0 top-[3.9rem] bg-blue-2 text-white py-2 px-4 rounded-full mr-2 mt-2 z-10 ${

@@ -153,9 +153,7 @@ export default function Chat() {
       // setContentData([...contentDataArray]);
     } catch (error) {
       console.error("Error fetching content:", error);
-    } finally {
     }
-
     return contentData;
   };
 

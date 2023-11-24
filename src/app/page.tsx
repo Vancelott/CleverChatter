@@ -1,5 +1,3 @@
-"use client";
-
 import { useCallback, useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import getCurrentUser from "./actions/getCurrentUser";
@@ -9,11 +7,13 @@ import { MessagesLanding } from "../../components/messagesLanding";
 import StatsLanding from "../../components/statsLanding";
 import { motion } from "framer-motion";
 
-export default function Home() {
+export default async function Home() {
+  const currentUser = await getCurrentUser();
+
   return (
     <>
       <div className="bg-blue-00">
-        <NavBar />
+        <NavBar currentUser={currentUser!} />
         <Landing />
         <MessagesLanding />
         <StatsLanding />

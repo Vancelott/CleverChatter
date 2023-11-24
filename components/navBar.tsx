@@ -11,14 +11,17 @@ import {
   UserCircleIcon,
 } from "@heroicons/react/24/solid";
 import toast from "react-hot-toast";
+import { User } from "@/app/types";
+import Image from "next/image";
 
-const NavBar = () => {
+const NavBar = ({ currentUser }: { currentUser: User }) => {
   const {
     // data: session
     status: status,
   } = useSession();
   const router = useRouter();
 
+  const [user, setUser] = useState(currentUser);
   const [sessionStatus, setSessionStatus] = useState(false);
   const [hiddenNav, setHiddenNav] = useState(true);
   const [hiddenLogin, setHiddenLogin] = useState(true);
@@ -65,9 +68,9 @@ const NavBar = () => {
   const handleTestLogin = () => {
     setIsLoading(true);
     signIn("github", {
-      name: "Ivan Angelov",
-      email: "vancelotkata@gmail.com",
-      username: "Vancelott",
+      name: `${process.env.GITHUB_TEST_NAME}`,
+      email: `${process.env.GITHUB_TEST_EMAIL}`,
+      username: `${process.env.GITHUB_TEST_USERNAME}`,
     })
       .then((callback) => {
         if (callback?.error) {
@@ -106,13 +109,23 @@ const NavBar = () => {
       <div className="max-w-7xl mx-auto md:px-6">
         <div className="flex flex-row-reverse justify-between py-5 px-3">
           {/* Profile Menu */}
-          <div className="flex pr-2">
-            <div className="relative" ref={profileRef}>
+          <div className="flex pr-2 sm:pr-0">
+            <div className="relative h-10 w-10" ref={profileRef}>
               <button
                 onClick={() => setHiddenLogin((hiddenLogin) => !hiddenLogin)}
                 className="focus:outline-none focus:ring focus:ring-blue-5 rounded-full transition delay-75"
               >
-                <UserCircleIcon className="h-9 w-9 text-white" />
+                {user?.image ? (
+                  <Image
+                    src={user.image as string}
+                    width={48}
+                    height={48}
+                    className="rounded-full"
+                    alt="User profile image"
+                  />
+                ) : (
+                  <UserCircleIcon className="h-10 w-10 text-white" />
+                )}
               </button>
               <motion.div
                 variants={navBarVariants}
@@ -120,7 +133,7 @@ const NavBar = () => {
                 className={`${
                   hiddenLogin
                     ? "hidden"
-                    : "flex flex-col items-center gap-y-4 justify-center p-6 w-64 sm:w-80 bg-gray-800  mt-1 rounded-xl absolute right-0 z-10"
+                    : "flex flex-col items-center justify-center gap-y-4 p-6 w-64 sm:w-80 bg-gray-800  mt-1 rounded-xl absolute right-0 z-10"
                 }`}
               >
                 {!sessionStatus && (
@@ -149,21 +162,28 @@ const NavBar = () => {
                   </>
                 )}
                 {sessionStatus && (
-                  <button
-                    onClick={handleLogout}
-                    className="flex items-center w-full justify-center text-center bg-blue-2 py-2 px-4 gap-4 rounded-lg text-md"
-                  >
-                    Log out
-                  </button>
+                  <>
+                    <div className="flex gap-2 items-center justify-start bg-slate-700 py-2 px-4 rounded-2xl w-full">
+                      <p className="text-white-0 font-medium text-lg whitespace-nowrap">
+                        Welcome, {user.username}
+                      </p>
+                    </div>
+                    <button
+                      onClick={handleLogout}
+                      className="flex items-center w-full justify-center text-center bg-blue-2 py-2 px-4 gap-4 rounded-lg text-md font-semibold"
+                    >
+                      Log out
+                    </button>
+                  </>
                 )}
               </motion.div>
             </div>
           </div>
           {/* Primary Nav/ Logo */}
           <div className="flex space-x-6 items-center">
-            <div className=" text-blue-2 sm:mr-4 font-bold text-xl">
+            <a href="/" className="text-blue-2 sm:mr-4 font-bold text-xl">
               CleverChatter
-            </div>
+            </a>
             <div className="text-white hidden md:flex items-center space-x-6 text-md font-semibold cursor-pointer">
               <a className="hover:text-blue-3">Home</a>
               <a className="hover:text-blue-3">Pricing</a>

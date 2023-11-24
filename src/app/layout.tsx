@@ -31,7 +31,6 @@ export default async function RootLayout({
         <body>
           <div className="flex flex-col h-screen justify-between">
             <Toaster />
-            {/* <NavBar /> */}
             {children}
           </div>
         </body>

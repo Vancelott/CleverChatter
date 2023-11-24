@@ -1,19 +1,14 @@
-// import bcrypt from "bcrypt";
 import { AuthOptions } from "next-auth";
-import CredentialsProvider from "next-auth/providers/credentials";
 import GitHubProvider from "next-auth/providers/github";
-
 import { PrismaClient } from "@prisma/client";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
-
 import NextAuth, { User as NextAuthUser } from "next-auth";
+
 interface NextAuthUserWithStringId extends NextAuthUser {
   id: string;
 }
 
 const prisma = new PrismaClient();
-
-// const bcrypt = require("bcrypt");
 
 export const authOptions: AuthOptions = {
   adapter: PrismaAdapter(prisma),

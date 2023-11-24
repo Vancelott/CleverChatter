@@ -146,3 +146,16 @@ export interface ChatData {
   repository: string;
   userId: string;
 }
+
+export interface User {
+  id: string;
+  email: string | null;
+  emailVerified: Date | null;
+  username: string | null;
+  name: string | null;
+  hashedPassword: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+  image: string | null;
+  role: string;
+}

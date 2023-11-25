@@ -1,15 +1,8 @@
 "use client";
 
-import { fetchChatsAction } from "@/app/actions/actions";
 import GetAllChats from "@/app/actions/getAllChats";
 import { useRouter } from "next/navigation";
-import {
-  startTransition,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import { useEffect, useState } from "react";
 import {
   ChevronDoubleRightIcon,
   ChevronDoubleLeftIcon,
@@ -22,20 +15,13 @@ import {
   ChatBubbleLeftRightIcon,
 } from "@heroicons/react/24/outline";
 import { ChatData } from "@/app/types";
-import {
-  eachDayOfInterval,
-  isAfter,
-  isBefore,
-  isEqual,
-  isToday,
-  subDays,
-} from "date-fns";
+import { isBefore, isToday, subDays } from "date-fns";
 
 // import { useRouter } from "next/navigation";
 
 export const ChatNav = () => {
   const [chats, setChats] = useState<ChatData[]>([]);
-  const [hidden, setHidden] = useState(false);
+  const [hidden, setHidden] = useState(true);
   const [slug, setSlug] = useState("");
 
   const [chatsToday, setChatsToday] = useState<ChatData[]>([]);

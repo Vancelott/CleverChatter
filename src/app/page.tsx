@@ -8,14 +8,6 @@ import AboutLanding from "../../components/aboutLanding";
 export default async function Home() {
   const currentUser = await getCurrentUser();
 
-  const showProfileMenu = async (show: boolean) => {
-    const data = show;
-
-    return data;
-  };
-
-  const show = await showProfileMenu;
-
   return (
     <>
       <div className="bg-blue-00">

@@ -13,11 +13,10 @@ import {
 import toast from "react-hot-toast";
 import { User } from "@/app/types";
 import Image from "next/image";
-import showProfileMenu from "@/app/actions/showProfileMenu";
 import { useProfileStore } from "@/app/store";
 
 const NavBar = ({ currentUser }: { currentUser: User }) => {
-  const { popUpProfile, setPopUpProfile } = useProfileStore();
+  const { hideProfile, setHideProfile } = useProfileStore();
 
   const {
     // data: session
@@ -39,7 +38,7 @@ const NavBar = ({ currentUser }: { currentUser: User }) => {
         profileRef.current &&
         !profileRef.current.contains(event.target as Node)
       ) {
-        setPopUpProfile(true);
+        setHideProfile(true);
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
@@ -118,12 +117,12 @@ const NavBar = ({ currentUser }: { currentUser: User }) => {
   return (
     <nav className="z-20 bg-blue-00">
       <div className="max-w-7xl mx-auto md:px-6">
-        <div className="flex flex-row-reverse justify-between py-5 px-3">
+        <div className="flex flex-row-reverse justify-between py-5 px-6">
           {/* Profile Menu */}
-          <div className="flex pr-2 sm:pr-0">
+          <div className="flex">
             <div className="relative h-10 w-10" ref={profileRef}>
               <button
-                onClick={() => setPopUpProfile(!popUpProfile)}
+                onClick={() => setHideProfile(!hideProfile)}
                 className="focus:outline-none focus:ring focus:ring-blue-5 rounded-full transition delay-75"
               >
                 {user?.image ? (
@@ -140,9 +139,9 @@ const NavBar = ({ currentUser }: { currentUser: User }) => {
               </button>
               <motion.div
                 variants={navBarVariants}
-                animate={popUpProfile ? "closed" : "open"}
+                animate={hideProfile ? "closed" : "open"}
                 className={`${
-                  popUpProfile
+                  hideProfile
                     ? "hidden"
                     : "flex flex-col items-center justify-center gap-y-4 p-6 w-64 sm:w-80 bg-gray-800  mt-1 rounded-xl absolute right-0 z-10"
                 }`}

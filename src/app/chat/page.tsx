@@ -348,16 +348,23 @@ export default function Chat() {
         {!hideList && (
           <>
             <div className="flex flex-col justify-center items-center bg-blue-00 h-screen my-10 mx-auto relative py-32 z-10">
-              <p className="font-bold text-5xl pb-4 whitespace-nowrap">
+              <p className="font-extrabold text-5xl pb-4 whitespace-nowrap">
                 Your repositories
               </p>
-              <p className="font-extralight text-xl pb-4">
+              <p className="font-semibold text-xl pb-4">
                 Choose a repository to prepare on
               </p>
               <RepoList data={data} handleCallback={getSelectedRepo} />
               <button
-                onClick={handleSubmit}
-                className="mt-10 bg-blue-2 px-3 py-3 rounded-xl text-white-1 font-medium text-xl hover:bg-blue-1 transition-bg-color duration-300"
+                onClick={() =>
+                  !selectedChildRepo ? handleSubmit() : undefined
+                }
+                disabled={!selectedChildRepo}
+                className={`mt-10 bg-blue-2 px-3 py-3 rounded-xl text-white-1 font-medium text-xl hover:bg-blue-1 transition-bg-color duration-300 ${
+                  !selectedChildRepo
+                    ? "cursor-not-allowed bg-blue-1 opacity-70 text-gray-200"
+                    : ""
+                }`}
               >
                 Submit
               </button>

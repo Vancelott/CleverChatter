@@ -1,5 +1,4 @@
 "use client";
-import showProfileMenu from "@/app/actions/showProfileMenu";
 import { useProfileStore } from "@/app/store";
 import { User } from "@/app/types";
 import { useRouter } from "next/navigation";
@@ -10,17 +9,17 @@ export const Landing = ({ currentUser }: { currentUser: User }) => {
   const [user, setUser] = useState(currentUser);
   const router = useRouter();
 
-  const { setPopUpProfile } = useProfileStore();
+  const { setHideProfile } = useProfileStore();
 
   const handleStart = () => {
-    setPopUpProfile(true);
+    setHideProfile(true);
     if (user) {
       router.push("/chat");
     } else {
       toast.error("Please sign in to continue.");
-      setPopUpProfile(false);
+      setHideProfile(false);
       setTimeout(() => {
-        setPopUpProfile(true);
+        setHideProfile(true);
       }, 4000);
     }
   };

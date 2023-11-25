@@ -1,21 +1,37 @@
 "use client";
-import "src/app/globals.css";
-import { Montserrat } from "next/font/google";
+import showProfileMenu from "@/app/actions/showProfileMenu";
+import { useProfileStore } from "@/app/store";
+import { User } from "@/app/types";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import toast from "react-hot-toast";
 
-const montserrat = Montserrat({
-  subsets: ["latin"],
-  display: "swap",
-  variable: "--font-montserrat",
-});
+export const Landing = ({ currentUser }: { currentUser: User }) => {
+  const [user, setUser] = useState(currentUser);
+  const router = useRouter();
 
-export const Landing = () => {
+  const { setPopUpProfile } = useProfileStore();
+
+  const handleStart = () => {
+    setPopUpProfile(true);
+    if (user) {
+      router.push("/chat");
+    } else {
+      toast.error("Please sign in to continue.");
+      setPopUpProfile(false);
+      setTimeout(() => {
+        setPopUpProfile(true);
+      }, 4000);
+    }
+  };
+
   return (
     // <Suspense fallback={<LoadingComponent />}>
     <div className="pt-0 xl:pt-6 xl:px-20">
       <div className="flex flex-row min-h-screen items-center justify-center overflow-x-hidden">
         {/* <div className="flex flex-col-reverse lg:flex-row-reverse items-center gap-x-8 bg-gray-100 rounded-2xl m-6 md:m-0 p-10"> */}
         <div className="absolute lg:static max-w-md max-h-md flex flex-col items-center justify-center mx-10 my-20 lg:pl-40 sm:max-w-3xl">
-          <h2 className="text-4xl sm:text-5xl text-blue-3 font-semibold">
+          <h2 className="text-4xl sm:text-5xl text-blue-4  font-semibold">
             Up your preparation to the next level with us
           </h2>
           <h3 className="mt-4 text-xl font-medium text-gray-200 sm:mt-3">
@@ -23,8 +39,8 @@ export const Landing = () => {
             smart questions and innovative solutions. Join thousands of users
             who trust our platform.
           </h3>
-          <button className="mt-10 bg-blue-2 px-3 py-3 rounded-xl text-white-1 font-medium text-xl hover:bg-blue-1 transition-bg-color duration-300">
-            <a href="/chat">Start now</a>
+          <button className="mt-10 bg-blue-2 px-3 py-3 rounded-xl text-white-1 font-semibold text-xl hover:bg-blue-1 transition-bg-color duration-300">
+            <a onClick={handleStart}>Start now</a>
           </button>
         </div>
         <svg
@@ -33,7 +49,7 @@ export const Landing = () => {
           xmlns="http://www.w3.org/2000/svg"
         >
           <defs>
-            <linearGradient id="b" gradientTransform="rotate(-45 .5 .5)">
+            <linearGradient id="b" gradientTransform="rotate(90 .5 .5)">
               <stop offset="0%" stopColor="#16425B" />
               <stop offset="100%" stopColor="#81C3D7" />
             </linearGradient>
@@ -51,12 +67,6 @@ export const Landing = () => {
             />
           </g>
         </svg>
-        {/* <Image
-              src={aboutPhoto}
-              className="h-[26rem] sm:h-[32rem] w-[32rem] object-cover rounded-lg relative"
-              alt="Photo for about page"
-            /> */}
-        {/* </div> */}
       </div>
     </div>
     // </Suspense>

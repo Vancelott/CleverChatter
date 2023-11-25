@@ -13,8 +13,12 @@ import {
 import toast from "react-hot-toast";
 import { User } from "@/app/types";
 import Image from "next/image";
+import showProfileMenu from "@/app/actions/showProfileMenu";
+import { useProfileStore } from "@/app/store";
 
 const NavBar = ({ currentUser }: { currentUser: User }) => {
+  const { popUpProfile, setPopUpProfile } = useProfileStore();
+
   const {
     // data: session
     status: status,
@@ -24,7 +28,7 @@ const NavBar = ({ currentUser }: { currentUser: User }) => {
   const [user, setUser] = useState(currentUser);
   const [sessionStatus, setSessionStatus] = useState(false);
   const [hiddenNav, setHiddenNav] = useState(true);
-  const [hiddenLogin, setHiddenLogin] = useState(true);
+  // const [hiddenLogin, setHiddenLogin] = useState(true);
   const profileRef = useRef<HTMLDivElement>(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -35,7 +39,7 @@ const NavBar = ({ currentUser }: { currentUser: User }) => {
         profileRef.current &&
         !profileRef.current.contains(event.target as Node)
       ) {
-        setHiddenLogin(true);
+        setPopUpProfile(true);
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
@@ -64,6 +68,13 @@ const NavBar = ({ currentUser }: { currentUser: User }) => {
       })
       .finally(() => setIsLoading(false));
   };
+
+  // useEffect(() => {
+  //   setTimeout(() => {
+  //     const result = showProfileMenu();
+  //     setHiddenLogin(result as boolean);
+  //   }, 500);
+  // }, []);
 
   const handleTestLogin = () => {
     setIsLoading(true);
@@ -105,14 +116,14 @@ const NavBar = ({ currentUser }: { currentUser: User }) => {
   };
 
   return (
-    <nav className="z-20">
+    <nav className="z-20 bg-blue-00">
       <div className="max-w-7xl mx-auto md:px-6">
         <div className="flex flex-row-reverse justify-between py-5 px-3">
           {/* Profile Menu */}
           <div className="flex pr-2 sm:pr-0">
             <div className="relative h-10 w-10" ref={profileRef}>
               <button
-                onClick={() => setHiddenLogin((hiddenLogin) => !hiddenLogin)}
+                onClick={() => setPopUpProfile(!popUpProfile)}
                 className="focus:outline-none focus:ring focus:ring-blue-5 rounded-full transition delay-75"
               >
                 {user?.image ? (
@@ -129,9 +140,9 @@ const NavBar = ({ currentUser }: { currentUser: User }) => {
               </button>
               <motion.div
                 variants={navBarVariants}
-                animate={hiddenLogin ? "closed" : "open"}
+                animate={popUpProfile ? "closed" : "open"}
                 className={`${
-                  hiddenLogin
+                  popUpProfile
                     ? "hidden"
                     : "flex flex-col items-center justify-center gap-y-4 p-6 w-64 sm:w-80 bg-gray-800  mt-1 rounded-xl absolute right-0 z-10"
                 }`}
@@ -184,14 +195,16 @@ const NavBar = ({ currentUser }: { currentUser: User }) => {
             <a href="/" className="text-blue-2 sm:mr-4 font-bold text-xl">
               CleverChatter
             </a>
-            <div className="text-white hidden md:flex items-center space-x-6 text-md font-semibold cursor-pointer">
-              <a className="hover:text-blue-3">Home</a>
-              <a className="hover:text-blue-3">Pricing</a>
+            {/* <div className="text-white hidden md:flex items-center space-x-6 text-md font-semibold cursor-pointer">
+              <a href="/services" className="hover:text-blue-3">
+                Services
+              </a>
               <a className="hover:text-blue-3">Contact us</a>
-            </div>
+              <a className="hover:text-blue-3">About</a>
+            </div> */}
           </div>
           {/* Mobile menu button */}
-          <motion.button
+          {/* <motion.button
             onClick={() => {
               hiddenNav === true ? setHiddenNav(false) : setHiddenNav(true);
             }}
@@ -204,10 +217,10 @@ const NavBar = ({ currentUser }: { currentUser: User }) => {
             ) : (
               <Bars2Icon className="h-9 w-9 text-white transform transition-transform delay-200 pl-3" />
             )}
-          </motion.button>
+          </motion.button> */}
           {/* Mobile burger menu */}
         </div>
-        <motion.div
+        {/* <motion.div
           variants={mobileNavVariants}
           animate={hiddenNav ? "closed" : "open"}
           className={
@@ -216,16 +229,19 @@ const NavBar = ({ currentUser }: { currentUser: User }) => {
               : `flex w-full md:hidden flex-col border-t-1 gap-2 py-2 px-4 text-md font-bold bg-gray-800`
           }
         >
-          <a className="text-gray-300 hover:bg-gray-700 hover:text-white rounded-md px-3 py-2 text-sm font-medium">
-            Home
-          </a>
-          <a className="text-gray-300 hover:bg-gray-700 hover:text-white rounded-md px-3 py-2 text-sm font-medium">
-            Pricing
+          <a
+            href="/services"
+            className="text-gray-300 hover:bg-gray-700 hover:text-white rounded-md px-3 py-2 text-sm font-medium"
+          >
+            Services
           </a>
           <a className="text-gray-300 hover:bg-gray-700 hover:text-white rounded-md px-3 py-2 text-sm font-medium">
             Contact us
           </a>
-        </motion.div>
+          <a className="text-gray-300 hover:bg-gray-700 hover:text-white rounded-md px-3 py-2 text-sm font-medium">
+            About
+          </a>
+        </motion.div> */}
       </div>
     </nav>
   );

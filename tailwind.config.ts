@@ -28,7 +28,8 @@ const config: Config = {
       },
     },
     fontFamily: {
-      sans: ["Montserrat"],
+      // sans: ["Montserrat"],
+      montserrat: ["Montserrat", "sans-serif"],
     },
   },
   plugins: [],

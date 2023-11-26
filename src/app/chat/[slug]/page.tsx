@@ -52,13 +52,6 @@ export default function Slug({
     GetTotalMessages(chatSlug).then((data) => {
       setTotalMessages(data);
     });
-    // const getCreator = async () => {
-    //   const chatCreator = await GetChatCreator();
-    //   if (chatCreator === true) {
-    //     setIsCreator(true);
-    //   }
-    // };
-    // getCreator();
   }, [chatSlug]);
 
   const handleInputSubmit = async () => {

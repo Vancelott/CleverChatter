@@ -6,6 +6,7 @@ import Chat from "./page";
 import createChat from "../actions/createChat";
 import GetMessages from "../actions/getMessages";
 import ChatNav from "./components/chatNav";
+import getCurrentUser from "../actions/getCurrentUser";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -19,10 +20,12 @@ export default async function ChatLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const currentUser = await getCurrentUser();
+
   return (
     <div className="flex w-full h-screen bg-blue-00 relative overflow-hidden">
       <div className="z-50">
-        <ChatNav />
+        <ChatNav currentUser={currentUser!} />
       </div>
       <div className="flex w-full h-screen bg-blue-00 mx-auto items-center justify-center content-center">
         <div className="h-max w-full lg:py-4 bg-blue-00 z-1">{children}</div>

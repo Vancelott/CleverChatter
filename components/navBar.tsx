@@ -18,16 +18,12 @@ import { useProfileStore } from "@/app/store";
 const NavBar = ({ currentUser }: { currentUser: User }) => {
   const { hideProfile, setHideProfile } = useProfileStore();
 
-  const {
-    // data: session
-    status: status,
-  } = useSession();
+  const { status: status } = useSession();
   const router = useRouter();
 
   const [user, setUser] = useState(currentUser);
   const [sessionStatus, setSessionStatus] = useState(false);
   const [hiddenNav, setHiddenNav] = useState(true);
-  // const [hiddenLogin, setHiddenLogin] = useState(true);
   const profileRef = useRef<HTMLDivElement>(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -67,13 +63,6 @@ const NavBar = ({ currentUser }: { currentUser: User }) => {
       })
       .finally(() => setIsLoading(false));
   };
-
-  // useEffect(() => {
-  //   setTimeout(() => {
-  //     const result = showProfileMenu();
-  //     setHiddenLogin(result as boolean);
-  //   }, 500);
-  // }, []);
 
   const handleTestLogin = () => {
     setIsLoading(true);

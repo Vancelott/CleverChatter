@@ -8,19 +8,18 @@ import {
   ChevronDoubleLeftIcon,
   HomeIcon,
   PlusIcon,
-  // ChatBubbleLeftIcon,
 } from "@heroicons/react/24/solid";
 import {
   ChatBubbleLeftIcon,
   ChatBubbleLeftRightIcon,
 } from "@heroicons/react/24/outline";
-import { ChatData } from "@/app/types";
+import { ChatData, User } from "@/app/types";
 import { isBefore, isToday, subDays } from "date-fns";
+import toast from "react-hot-toast";
 
-// import { useRouter } from "next/navigation";
-
-export const ChatNav = () => {
+export const ChatNav = ({ currentUser }: { currentUser: User }) => {
   const [chats, setChats] = useState<ChatData[]>([]);
+  const [user, setUser] = useState<User>(currentUser);
   const [hidden, setHidden] = useState(true);
   const [slug, setSlug] = useState("");
 
@@ -78,7 +77,11 @@ export const ChatNav = () => {
   }, [chats]);
 
   const handleNewChat = () => {
-    router.push(`/chat`, { scroll: false });
+    if (user) {
+      router.push(`/chat`, { scroll: false });
+    } else {
+      toast.error("Please sign in to create a new chat.");
+    }
   };
 
   const handleHome = () => {

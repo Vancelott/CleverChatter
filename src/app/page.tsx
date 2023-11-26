@@ -4,6 +4,7 @@ import NavBar from "../../components/navBar";
 import { MessagesLanding } from "../../components/messagesLanding";
 import StatsLanding from "../../components/statsLanding";
 import AboutLanding from "../../components/aboutLanding";
+import Footer from "../../components/footer";
 
 export default async function Home() {
   const currentUser = await getCurrentUser();
@@ -16,6 +17,7 @@ export default async function Home() {
         <MessagesLanding />
         <AboutLanding />
         <StatsLanding />
+        <Footer />
       </div>
     </>
   );

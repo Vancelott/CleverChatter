@@ -13,7 +13,7 @@ export const RepoList = ({
   handleCallback,
 }: {
   data: Repository[];
-  handleCallback: any;
+  handleCallback: (selectedRepo: string) => void;
 }) => {
   const [selectedRepo, setSelectedRepo] = useState("");
 

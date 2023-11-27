@@ -13,13 +13,11 @@ const hfToken = process.env.HF_ACCESS_TOKEN;
 
 const hf = new HfInference(process.env.HF_ACCESS_TOKEN);
 
-export default function Slug({
-  params,
-  isCreator,
-}: {
-  params: { slug: string };
-  isCreator: boolean;
-}) {
+interface SlugPageProps {
+  params: { slug: string,   isCreator: boolean};
+}
+
+export default function Slug({ params }: SlugPageProps) {
   const { ref: myRef, inView: entryVisibility, entry } = useInView();
 
   const [chatSlug] = useState(params.slug);
@@ -30,7 +28,7 @@ export default function Slug({
   const [currentOutput, setCurrentOutput] = useState("");
   const [lastOutput, setLastOutput] = useState<string[]>([""]);
   const [submit, setSubmit] = useState(false);
-  // const [isCreator, setIsCreator] = useState(false);
+  const [isCreator, setIsCreator] = useState(params.isCreator);
 
   const [messages, setMessages] = useState<CurrentMessages>({
     ai: [],

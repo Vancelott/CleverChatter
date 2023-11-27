@@ -6,7 +6,7 @@ export default async function SlugLayout({
   params,
 }: {
   children: React.ReactNode;
-  params: { slug: string };
+  params: { slug: string; isCreator: boolean };
 }) {
   const slug = params?.slug;
 
@@ -14,7 +14,7 @@ export default async function SlugLayout({
 
   return (
     <div className="h-screen w-full px-4 md:px-24 py-12 bg-blue-00 overflow-auto">
-      <Slug isCreator={isCreator!} params={{ slug }} />
+      <Slug params={{ slug, isCreator: isCreator! }} />
     </div>
   );
 }

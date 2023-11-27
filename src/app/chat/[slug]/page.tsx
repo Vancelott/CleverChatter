@@ -8,7 +8,6 @@ import { MessagesData, CurrentMessages } from "../../types";
 import GetTotalMessages from "@/app/actions/getTotalMessages";
 import { useInView } from "react-intersection-observer";
 import toast, { Toaster } from "react-hot-toast";
-import GetChatCreator from "@/app/actions/getChatCreator";
 
 const hfToken = process.env.HF_ACCESS_TOKEN;
 
@@ -197,20 +196,32 @@ export default function Slug({
           <div ref={myRef}></div>
           <div className="flex flex-col">
             <div className="flex flex-col-reverse">
-              {userMessages?.map(
-                (userMessage: MessagesData, index = +userMessage.id) => (
-                  <div key={index}>
-                    <p className="px-4 py-6 bg-blue-0 text-white rounded-3xl my-6">
-                      {userMessage.messageContent}
-                    </p>
-                    <p className="px-4 py-6 bg-blue-1 text-white rounded-3xl">
-                      {aiMessages &&
-                        aiMessages[index] &&
-                        aiMessages[index].messageContent}
-                    </p>
-                  </div>
-                )
-              )}
+              <Suspense
+                fallback={
+                  <p className="font-bold text-2xl text-white">Loading....</p>
+                }
+              >
+                {userMessages?.map(
+                  (userMessage: MessagesData, index = +userMessage.id) => (
+                    <div key={index}>
+                      <p className="px-4 py-6 bg-blue-0 text-white rounded-3xl my-6">
+                        {userMessage.messageContent}
+                      </p>
+                      <p className="px-4 py-6 bg-blue-1 text-white rounded-3xl">
+                        <Suspense
+                          fallback={
+                            <p className="font-bold text-white">....</p>
+                          }
+                        >
+                          {aiMessages &&
+                            aiMessages[index] &&
+                            aiMessages[index].messageContent}
+                        </Suspense>
+                      </p>
+                    </div>
+                  )
+                )}
+              </Suspense>
             </div>
             {/* {userMessages!?.length > 0 && */}
             <div className="flex flex-col">

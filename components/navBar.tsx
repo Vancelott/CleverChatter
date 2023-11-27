@@ -1,19 +1,16 @@
 "use client";
 
 import { signIn, signOut, useSession } from "next-auth/react";
-import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import {
-  Bars2Icon,
-  Bars3Icon,
-  UserCircleIcon,
-} from "@heroicons/react/24/solid";
+import { UserCircleIcon } from "@heroicons/react/24/solid";
 import toast from "react-hot-toast";
 import { User } from "@/app/types";
 import Image from "next/image";
 import { useProfileStore } from "@/app/store";
+import cleverchatterLogo from "public/cleverchatterLogo.png";
+// import cleverchatter from "public/cleverchatter.svg";
 
 const NavBar = ({ currentUser }: { currentUser: User }) => {
   const { hideProfile, setHideProfile } = useProfileStore();
@@ -180,8 +177,11 @@ const NavBar = ({ currentUser }: { currentUser: User }) => {
           </div>
           {/* Primary Nav/ Logo */}
           <div className="flex space-x-6 items-center">
-            <a href="/" className="text-blue-2 sm:mr-4 font-bold text-xl">
-              CleverChatter
+            <a
+              href="/"
+              className="text-blue-2 sm:mr-4 font-bold text-xl max-w-[10rem] max-h-[10rem]"
+            >
+              <Image src={cleverchatterLogo} alt="Logo" className="" />
             </a>
             {/* <div className="text-white hidden md:flex items-center space-x-6 text-md font-semibold cursor-pointer">
               <a href="/services" className="hover:text-blue-3">

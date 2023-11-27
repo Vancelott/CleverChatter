@@ -1,14 +1,6 @@
 "use client";
-import "src/app/globals.css";
-import { Montserrat } from "next/font/google";
-import {
-  Variants,
-  motion,
-  useInView,
-  stagger,
-  useAnimation,
-} from "framer-motion";
-import { useEffect, useRef, useState } from "react";
+import { motion, useInView, useAnimation } from "framer-motion";
+import { useEffect, useRef } from "react";
 
 export const MessagesLanding = () => {
   const ref = useRef(null);
@@ -16,9 +8,9 @@ export const MessagesLanding = () => {
   const controls = useAnimation();
 
   const userMessage =
-    "Hey, I'm working on a repository crawler project, and I need some interesting questions to test its capabilities. Can you help me out?";
+    "Hey, I'm working on a repository crawler project, and I need some help with the preparation for my upcoming interview. Can you help me out?";
 
-  const aiMessage = `Absolutely! 🚀 Your repository crawler project sounds fascinating. Here are a few engaging questions to put it to the test: 1. "How does your crawler handle repositories with a large number of branches?" 2. "Can it accurately identify and classify different file types within a repository?" 3. "What strategies does it use to handle complex nested directory structures?" 4. "How well does it adapt to changes in the structure of a repository over time?" 5. "Can your crawler efficiently extract metadata, such as license information, from various code files?" Feel free to ask for more specific questions tailored to your project's needs!`;
+  const aiMessage = `Absolutely! 🚀 Your repository crawler project sounds fascinating. Here are a few engaging questions to put it to the test: 1. How does your crawler handle repositories with a large number of branches? 2. Can it accurately identify and classify different file types within a repository? 3. What strategies does it use to handle complex nested directory structures? 4. How well does it adapt to changes in the structure of a repository over time?`;
 
   const userMessageArr = Array.from(userMessage);
   const aiMessageArr = Array.from(aiMessage);
@@ -37,18 +29,7 @@ export const MessagesLanding = () => {
     }
   }, [controls, isInView]);
 
-  // const words: string[] = [];
-  // const test = (index: number) => {
-  //   while (aiMessageArr[index]) {
-  //     words.push(aiMessageArr[index] + aiMessageArr[index++]);
-  //   }
-
-  //   return;
-  // };
-  // test(0);
-
   return (
-    // <Suspense fallback={<LoadingComponent />}>
     <motion.div
       initial={{ opacity: 0 }}
       whileInView={{ opacity: 1 }}
@@ -79,12 +60,11 @@ export const MessagesLanding = () => {
               <motion.span
                 ref={ref}
                 key={index}
-                className="inline-block whitespace-break-spaces"
                 initial={{ opacity: 0 }}
                 animate={controls}
                 transition={{
-                  duration: 0.015,
-                  delay: index * 0.015,
+                  duration: 0.012,
+                  delay: index * 0.012,
                 }}
                 // whileInView="animate"
                 viewport={{
@@ -99,7 +79,6 @@ export const MessagesLanding = () => {
             {userMessageArr.map((char, index) => (
               <motion.span
                 key={index}
-                className="inline-block whitespace-break-spaces "
                 initial={{ opacity: 0 }}
                 // animate={{ opacity: 1 }}
                 transition={{ duration: 0.015, delay: index * 0.015 }}
@@ -113,14 +92,7 @@ export const MessagesLanding = () => {
             ))}
           </div>
         </div>
-        {/* <Image
-              src={aboutPhoto}
-              className="h-[26rem] sm:h-[32rem] w-[32rem] object-cover rounded-lg relative"
-              alt="Photo for about page"
-            /> */}
-        {/* </div> */}
       </motion.div>
     </motion.div>
-    // </Suspense>
   );
 };

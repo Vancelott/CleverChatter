@@ -1,4 +1,6 @@
 "use client";
+import Image from "next/image";
+import cleverchatterLogo from "public/cleverchatterLogo.png";
 
 export const Footer = () => {
   return (
@@ -9,10 +11,17 @@ export const Footer = () => {
           aria-label="Footer"
         >
           <div className="py-2">
-            <p className="text-lg font-semibold text-gray-100 hover:text-gray-400 max-w-xl">
+            <p className="text-lg font-semibold text-gray-100  max-w-xl">
               AI-Driven Interview Prep Made Easy
             </p>
-            <p className="text-sm font-extrabold text-blue-4">CleverChatter</p>
+            {/* <div className="text-blue-2 sm:mr-4 font-bold text-xl max-w-[4rem] max-h-[4rem]"> */}
+            <Image
+              src={cleverchatterLogo}
+              alt="Logo"
+              className="max-w-[7.5rem] max-h-[7.5rem]"
+            />
+            {/* </div> */}
+            {/* <p className="text-sm font-extrabold text-blue-4">CleverChatter</p> */}
           </div>
           <a href="https://github.com/Vancelott" className="flex">
             <svg

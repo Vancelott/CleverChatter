@@ -1,3 +1,5 @@
+import { User as NextAuthUser } from "next-auth";
+
 export interface RepoContent {
   data: {
     type: string;
@@ -158,4 +160,8 @@ export interface User {
   updatedAt: Date;
   image: string | null;
   role: string;
+}
+
+export interface NextAuthUserWithStringId extends NextAuthUser {
+  id: string;
 }

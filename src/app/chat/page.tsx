@@ -1,12 +1,7 @@
 "use client";
 
-import React, { useCallback, useEffect, useState } from "react";
-import { useSession } from "next-auth/react";
-import getCurrentUser from "../actions/getCurrentUser";
+import React, { useEffect, useState } from "react";
 import octokit from "../libs/octokit";
-import getSession from "../actions/getSession";
-import GetUsername from "../actions/getUsername";
-import toast from "react-hot-toast";
 import { HfInference } from "@huggingface/inference";
 import { RepoList } from "./components/repoList";
 import {
@@ -16,9 +11,10 @@ import {
   CurrentMessages,
 } from "../types";
 import createChat from "../actions/createChat";
-import { send } from "process";
 import UpdateChat from "../actions/updateChat";
 import { useRouter } from "next/navigation";
+import getCurrentUser from "../actions/getCurrentUser";
+import Loading from "./loading";
 
 const hfToken = process.env.HF_ACCESS_TOKEN;
 
@@ -26,52 +22,33 @@ const hf = new HfInference(process.env.HF_ACCESS_TOKEN);
 
 export default function Chat() {
   const [data, setData] = useState<Repository[]>([]);
-  const [selectedRepo, setSelectedRepo] = useState("");
+  const [selectedRepo, setSelectedRepo] = useState<string>("");
 
-  const [submit, setSubmit] = useState(false);
+  const [submit, setSubmit] = useState<boolean>(false);
   const [repoData, setRepoData] = useState<string[]>([]);
   const [contentData, setContentData] = useState<ContentData[]>([]);
-  const [username, setUsername] = useState("Vancelott");
+  const [username, setUsername] = useState<string>("");
 
   const [mappedContent, setMappedContent] = useState<string[]>([]);
-  const [userInput, setUserInput] = useState("");
-  const [currentOutput, setCurrentOutput] = useState("");
+  const [userInput, setUserInput] = useState<string>("");
+  const [currentOutput, setCurrentOutput] = useState<string>("");
   const [lastOutput, setLastOutput] = useState<string[]>([""]);
   const [messages, setMessages] = useState<CurrentMessages>({
     ai: [],
     user: [],
   });
-  const [currentSortedMessages, setCurrentSortedMessages] = useState<any[]>();
   const [clickCount, setClickCount] = useState(0);
-
   const [hideList, setHideList] = useState(false);
   const [chatSlug, setChatSlug] = useState("");
-
-  const { data: session } = useSession();
   const router = useRouter();
 
   useEffect(() => {
-    // const getUserData = async () => {
-    //   const currentUser = await getCurrentUser();
-    //   console.log(currentUser);
-    //   const username = currentUser?.username;
-    //   setUsername(username!);
-    // };
-    // const getUserData = async () => {
-    //   const usernameData = await GetUsername();
-    //   console.log("test:", usernameData);
-    //   setUsername(usernameData!);
-    // };
-    // console.log("username:", username);
-  }, [username]);
-
-  // const username = userData.user?.username
-
-  const getUserData = async () => {
-    const user = await getCurrentUser();
-    console.log("test:", user?.name);
-    setUsername(user?.username!);
-  };
+    const getUsername = async () => {
+      const user = await getCurrentUser();
+      setUsername(user?.username as string);
+    };
+    getUsername();
+  });
 
   useEffect(() => {
     if (username) {
@@ -88,12 +65,6 @@ export default function Chat() {
       fetchRepoList();
     }
   }, [username]);
-
-  const reposMap = data?.map((repo) => (
-    <div key={repo.id} onClick={() => setSelectedRepo(repo.name)}>
-      <p>{repo.name}</p>
-    </div>
-  ));
 
   const fetchItemPaths = async (owner: string, repo: string, path: string) => {
     setSubmit(true);
@@ -356,9 +327,7 @@ export default function Chat() {
               </p>
               <RepoList data={data} handleCallback={getSelectedRepo} />
               <button
-                onClick={() =>
-                  !selectedChildRepo ? handleSubmit() : undefined
-                }
+                onClick={() => (selectedChildRepo ? handleSubmit() : undefined)}
                 disabled={!selectedChildRepo}
                 className={`mt-10 bg-blue-2 px-3 py-3 rounded-xl text-white-1 font-medium text-xl hover:bg-blue-1 transition-bg-color duration-300 ${
                   !selectedChildRepo
@@ -373,8 +342,9 @@ export default function Chat() {
         )}
         {hideList && (
           <>
-            <div className="px-4 mx-auto flex flex-col max-w-5xl">
+            <div className="w-full h-screen mx-auto flex flex-col justify-between max-w-5xl px-8 md:px-24 py-12">
               <div className="flex justify-start flex-col">
+                {messages.user.length === 0 && <Loading />}
                 {messages.user?.map((userMessage: string, index) => (
                   <div key={index}>
                     <p className="px-4 py-6 bg-blue-0 text-white rounded-3xl my-6">
@@ -388,11 +358,13 @@ export default function Chat() {
                   </div>
                 ))}
               </div>
-              <div>
-                <div className="static">
+              {messages.user.length > 0 && (
+                <div className="static mb-16">
                   <div className="relative flex flex-col">
                     <button
-                      onClick={handleSubmit}
+                      onClick={() => {
+                        submit ? null : handleSubmit();
+                      }}
                       disabled={submit}
                       className={`absolute right-0 top-[3.9rem] bg-blue-2 text-white py-2 px-4 rounded-full mr-2 mt-2 z-10 ${
                         submit ? "opacity-90 bg-blue-4 cursor-not-allowed" : ""
@@ -416,7 +388,7 @@ export default function Chat() {
                     />
                   </div>
                 </div>
-              </div>
+              )}
             </div>
           </>
         )}

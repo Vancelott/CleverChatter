@@ -181,7 +181,12 @@ const NavBar = ({ currentUser }: { currentUser: User }) => {
               href="/"
               className="text-blue-2 sm:mr-4 font-bold text-xl max-w-[10rem] max-h-[10rem]"
             >
-              <Image src={cleverchatterLogo} alt="Logo" className="" />
+              <Image
+                priority={true}
+                src={cleverchatterLogo}
+                alt="Logo"
+                className=""
+              />
             </a>
             {/* <div className="text-white hidden md:flex items-center space-x-6 text-md font-semibold cursor-pointer">
               <a href="/services" className="hover:text-blue-3">

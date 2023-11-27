@@ -16,6 +16,7 @@ export const Footer = () => {
             </p>
             {/* <div className="text-blue-2 sm:mr-4 font-bold text-xl max-w-[4rem] max-h-[4rem]"> */}
             <Image
+              priority={true}
               src={cleverchatterLogo}
               alt="Logo"
               className="max-w-[7.5rem] max-h-[7.5rem]"

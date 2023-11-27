@@ -1,8 +1,5 @@
 import GetChatCreator from "@/app/actions/getChatCreator";
-import getCurrentUser from "@/app/actions/getCurrentUser";
-import { Toaster } from "react-hot-toast";
 import Slug from "./page";
-import { Suspense } from "react";
 
 export default async function SlugLayout({
   children,

@@ -10,17 +10,12 @@ const nextConfig = {
     return config;
   },
   experimental: {
-    serverComponentsExternalPackages: [
-      "bcrypt",
-      "@google-cloud/dialogflow",
-      "google-cloud/dialogflow",
-      "@xenova/transformers",
-      "xenova/transformers",
-      "sharp",
-      "onnxruntime-node",
-    ],
+    serverComponentsExternalPackages: ["bcrypt", "sharp", "onnxruntime-node"],
     serverActions: true,
   },
+  // typescript: {
+  //   ignoreBuildErrors: true,
+  // },
 };
 
 module.exports = {

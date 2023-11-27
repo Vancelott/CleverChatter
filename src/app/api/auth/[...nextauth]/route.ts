@@ -10,7 +10,7 @@ interface NextAuthUserWithStringId extends NextAuthUser {
 
 const prisma = new PrismaClient();
 
-export const authOptions: AuthOptions = {
+const authOptions: AuthOptions = {
   adapter: PrismaAdapter(prisma),
   providers: [
     GitHubProvider({

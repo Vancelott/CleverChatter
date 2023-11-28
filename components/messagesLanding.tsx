@@ -36,7 +36,7 @@ export const MessagesLanding = () => {
       viewport={{ once: true, amount: 0.15 }}
     >
       <div className="w-full mx-auto flex items-center justify-center">
-        <p className="text-3xl mx-8 lg:mx-0 lg:text-6xl font-extrabold max-w-4xl text-center">
+        <p className="text-3xl text-white mx-8 lg:mx-0 lg:text-6xl font-extrabold max-w-4xl text-center">
           Getting ready for an interview has never been easier
         </p>
       </div>
@@ -58,7 +58,6 @@ export const MessagesLanding = () => {
           >
             {aiMessageArr.map((char, index) => (
               <motion.span
-                ref={ref}
                 key={index}
                 initial={{ opacity: 0 }}
                 animate={controls}
@@ -78,6 +77,7 @@ export const MessagesLanding = () => {
           <div className="w-full px-4 py-6 bg-blue-1 text-white rounded-3xl text-xl place-self-start">
             {userMessageArr.map((char, index) => (
               <motion.span
+                ref={ref}
                 key={index}
                 initial={{ opacity: 0 }}
                 // animate={{ opacity: 1 }}

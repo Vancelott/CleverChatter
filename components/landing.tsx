@@ -38,7 +38,7 @@ export const Landing = ({ currentUser }: { currentUser: User }) => {
             smart questions and innovative solutions. Join thousands of users
             who trust our platform.
           </h3>
-          <button className="mt-10 bg-blue-2 px-3 py-3 rounded-xl text-white-1 font-semibold text-xl hover:bg-blue-1 transition-bg-color duration-300">
+          <button className="mt-10 bg-blue-2 px-3 py-3 rounded-xl text-white font-semibold text-xl hover:bg-blue-1 transition-bg-color duration-300">
             <a onClick={handleStart}>Start now</a>
           </button>
         </div>

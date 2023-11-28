@@ -68,7 +68,12 @@ CleverChatter is currently operating with limited functionality due to the unava
 
 - **Chat**
 
-![cleverchatter-chat](https://github.com/Vancelott/CleverChatter/assets/129599049/94d31066-80ce-4d81-a1ab-edc881847748)
+![cleverchatter-chat](https://github.com/Vancelott/CleverChatter/assets/129599049/70892055-f93a-493c-951b-caf6aff3c271)
+
+## Upcoming Features
+
+- Select a few random functions and generate questions for them.
+- Create a roadmap-like future in which the user can see what areas need to be improved. 
 
 ## Contributing
 

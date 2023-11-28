@@ -8,6 +8,10 @@ CleverChatter is an AI-powered GitHub repository crawler designed to assist user
 
 CleverChatter is currently operating with limited functionality due to the unavailability of free AI models capable of generating both code and coding-related questions and being conversational at the same time. Once possible, the model will be switched out to one which meets the aforementioned requirements.
 
+## Live Preview
+
+You can check out the live demo of Cleverchatter at: https://cleverchatter.vercel.app/
+
 ## Features
 
 - **Code Analysis for Interviews**: CleverChatter analyzes your GitHub repository's code and generates relevant technical questions to help you prepare for interviews.

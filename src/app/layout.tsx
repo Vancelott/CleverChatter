@@ -28,7 +28,10 @@ export default async function RootLayout({
     <html lang="en">
       <AuthContext>
         <body>
-          <div className="flex flex-col h-screen justify-between font-montserrat">
+          <div
+            className="flex flex-col h-screen justify-between font-montserrat"
+            data-testid="root-layout"
+          >
             <Toaster position="top-center" />
             {children}
           </div>

@@ -14,7 +14,7 @@ const hfToken = process.env.HF_ACCESS_TOKEN;
 const hf = new HfInference(process.env.HF_ACCESS_TOKEN);
 
 interface SlugPageProps {
-  params: { slug: string,   isCreator: boolean};
+  params: { slug: string; isCreator: boolean };
 }
 
 export default function Slug({ params }: SlugPageProps) {
@@ -267,6 +267,7 @@ export default function Slug({ params }: SlugPageProps) {
                     : ""
                 }`}
                 onChange={(e) => setUserInput(e.target.value)}
+                data-testid="slug-input"
               />
             </div>
           </div>

@@ -11,8 +11,8 @@ export default async function Home() {
 
   return (
     <>
-      <div className="bg-blue-00">
-        <NavBar currentUser={currentUser!} />
+      <div className="bg-blue-00" data-testid="home-page-root">
+        <NavBar currentUser={currentUser!} data-testid="navBar" />
         <Landing currentUser={currentUser!} />
         <MessagesLanding />
         <AboutLanding />

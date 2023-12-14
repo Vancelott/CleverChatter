@@ -101,12 +101,16 @@ const NavBar = ({ currentUser }: { currentUser: User }) => {
   };
 
   return (
-    <nav className="z-20 bg-blue-00">
+    <nav className="z-20 bg-blue-00" data-testid="navBar">
       <div className="max-w-7xl mx-auto md:px-6">
         <div className="flex flex-row-reverse justify-between py-5 px-6">
           {/* Profile Menu */}
           <div className="flex">
-            <div className="relative h-10 w-10" ref={profileRef}>
+            <div
+              className="relative h-10 w-10"
+              ref={profileRef}
+              data-testid="profile-menu-button"
+            >
               <button
                 onClick={() => setHideProfile(!hideProfile)}
                 className="focus:outline-none focus:ring focus:ring-blue-5 rounded-full transition delay-75"
@@ -152,6 +156,7 @@ const NavBar = ({ currentUser }: { currentUser: User }) => {
                     <button
                       onClick={handleTestLogin}
                       className="flex items-center w-full justify-center text-center bg-blue-2 py-2 px-4 gap-4 rounded-lg text-md font-semibold"
+                      data-testid="test-login-button"
                     >
                       Login with a Test account
                     </button>
@@ -161,7 +166,7 @@ const NavBar = ({ currentUser }: { currentUser: User }) => {
                   <>
                     <div className="flex gap-2 items-center justify-start bg-slate-700 py-2 px-4 rounded-2xl w-full">
                       <p className="text-white-0 font-medium text-lg whitespace-nowrap">
-                        Welcome, {user.username}
+                        Welcome, {user?.name}
                       </p>
                     </div>
                     <button

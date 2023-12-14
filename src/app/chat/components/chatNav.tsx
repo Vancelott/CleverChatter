@@ -113,6 +113,7 @@ export const ChatNav = ({ currentUser }: { currentUser: User }) => {
           <nav
             className="mt-5 flex-1 px-2 bg-gray-800 space-y-1"
             aria-label="Sidebar"
+            data-testid="chatnav"
           >
             {chats?.length === 0 && (
               <div className="flex items-center justify-center px-4 w-full h-full">
@@ -166,6 +167,7 @@ export const ChatNav = ({ currentUser }: { currentUser: User }) => {
                 </p>
                 {chatsPreviousSevenDays?.map((item: ChatData) => (
                   <div
+                    data-testid="chats-7days"
                     key={item.id}
                     onClick={() => handleClick(item.slug)}
                     className={`text-gray-300 hover:bg-gray-700 hover:text-white

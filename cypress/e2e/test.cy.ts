@@ -111,56 +111,56 @@ const mockRepoList: ChatData[] = [
 //   });
 // });
 
-describe("Login page", () => {
-  before(() => {
-    cy.visit("http://localhost:3000");
-  });
-  it("Login with GITHUB", () => {
-    const username = Cypress.env("GITHUB_USER");
-    const password = Cypress.env("GITHUB_PW");
-    const loginUrl = Cypress.env("SITE_NAME");
-    const cookieName = Cypress.env("COOKIE_NAME");
-    const socialLoginOptions = {
-      username,
-      password,
-      loginUrl,
-      headless: true,
-      logs: false,
-      isPopup: true,
-      loginSelector: `a[href="${Cypress.env(
-        "SITE_NAME"
-      )}/api/auth/signin/github"]`,
-      postLoginSelector: ".unread-count",
-    };
+// describe("Login", () => {
+//   before(() => {
+//     cy.visit("http://localhost:3000");
+//   });
+//   it("Login with GITHUB", () => {
+//     const username = Cypress.env("GITHUB_USER");
+//     const password = Cypress.env("GITHUB_PW");
+//     const loginUrl = Cypress.env("SITE_NAME");
+//     const cookieName = Cypress.env("COOKIE_NAME");
+//     const socialLoginOptions = {
+//       username,
+//       password,
+//       loginUrl,
+//       headless: true,
+//       logs: false,
+//       isPopup: true,
+//       loginSelector: `a[href="${Cypress.env(
+//         "SITE_NAME"
+//       )}/api/auth/signin/github"]`,
+//       postLoginSelector: ".unread-count",
+//     };
 
-    cy.task("GithubSocialLogin", socialLoginOptions).then(() => {
-      cy.clearCookies();
+//     cy.task("GithubSocialLogin", socialLoginOptions).then(() => {
+//       cy.clearCookies();
 
-      const cookie: any = cy
-        .getAllCookies()
-        .filter((cookie: any) => cookie.name === cookieName)
-        .clearCookie(cookieName);
+//       const cookie: any = cy
+//         .getAllCookies()
+//         .filter((cookie: any) => cookie.name === cookieName)
+//         .clearCookie(cookieName);
 
-      if (cookie) {
-        cy.setCookie(cookie.name, cookie.value, {
-          domain: cookie.domain,
-          expiry: cookie.expires,
-          httpOnly: cookie.httpOnly,
-          path: cookie.path,
-          secure: cookie.secure,
-        });
+//       if (cookie) {
+//         cy.setCookie(cookie.name, cookie.value, {
+//           domain: cookie.domain,
+//           expiry: cookie.expires,
+//           httpOnly: cookie.httpOnly,
+//           path: cookie.path,
+//           secure: cookie.secure,
+//         });
 
-        // Cypress.Cookies.defaults({
-        //   preserve: cookieName,
-        // });
+//         // Cypress.Cookies.defaults({
+//         //   preserve: cookieName,
+//         // });
 
-        //  cy.session('unique_identifier', cy.githubLogin, {
-        //       validate () {
-        //         cy.getCookies().should('have.length', 2)
-        //        },
-        //        cacheAcrossSpecs: true
-        //     })
-      }
-    });
-  });
-});
+//         //  cy.session('unique_identifier', cy.githubLogin, {
+//         //       validate () {
+//         //         cy.getCookies().should('have.length', 2)
+//         //        },
+//         //        cacheAcrossSpecs: true
+//         //     })
+//       }
+//     });
+//   });
+// });

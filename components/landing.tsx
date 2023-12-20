@@ -2,7 +2,7 @@
 import { useProfileStore } from "@/app/store";
 import { User } from "@/app/types";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
 export const Landing = ({ currentUser }: { currentUser: User }) => {
@@ -24,8 +24,11 @@ export const Landing = ({ currentUser }: { currentUser: User }) => {
     }
   };
 
+  useEffect(() => {
+    router.prefetch("/chat");
+  }, [router]);
+
   return (
-    // <Suspense fallback={<LoadingComponent />}>
     <div className="pt-0 xl:pt-6 xl:px-20">
       <div className="flex flex-row min-h-screen items-center justify-center overflow-x-hidden">
         {/* <div className="flex flex-col-reverse lg:flex-row-reverse items-center gap-x-8 bg-gray-100 rounded-2xl m-6 md:m-0 p-10"> */}
@@ -70,6 +73,5 @@ export const Landing = ({ currentUser }: { currentUser: User }) => {
         </svg>
       </div>
     </div>
-    // </Suspense>
   );
 };

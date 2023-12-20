@@ -189,90 +189,95 @@ export default function Slug({ params }: SlugPageProps) {
 
   return (
     <>
-      <div className="w-full h-screen px-4 mx-auto flex flex-col justify-between max-w-5xl my-6">
-        <div className="flex justify-start flex-col">
-          <div ref={myRef}></div>
-          <div className="flex flex-col">
-            <div className="flex flex-col-reverse">
-              <Suspense
-                fallback={
-                  <p className="font-bold text-2xl text-white">Loading....</p>
-                }
-              >
-                {userMessages?.map(
-                  (userMessage: MessagesData, index = +userMessage.id) => (
-                    <div key={index}>
-                      <p className="px-4 py-6 bg-blue-0 text-white rounded-3xl my-6">
-                        {userMessage.messageContent}
-                      </p>
-                      <p className="px-4 py-6 bg-blue-1 text-white rounded-3xl">
-                        <Suspense
-                          fallback={
-                            <p className="font-bold text-white">....</p>
-                          }
-                        >
-                          {aiMessages &&
-                            aiMessages[index] &&
-                            aiMessages[index].messageContent}
-                        </Suspense>
-                      </p>
-                    </div>
-                  )
-                )}
-              </Suspense>
-            </div>
-            {/* {userMessages!?.length > 0 && */}
+      <Suspense
+        fallback={<p className="font-bold text-2xl text-white">Loading....</p>}
+      >
+        <div className="w-full h-screen px-4 mx-auto flex flex-col justify-between max-w-5xl my-6">
+          <div className="flex justify-start flex-col">
+            <div ref={myRef}></div>
             <div className="flex flex-col">
-              {messages.user?.map((userMessage: string, index) => (
-                <div key={index}>
-                  <p className="px-4 py-6 bg-blue-0 text-white rounded-3xl my-6">
-                    {userMessage}
-                  </p>
-                  <p className="px-4 py-6 bg-blue-1 text-white rounded-3xl">
-                    {messages.ai[index]
-                      ? messages.ai && messages.ai[index]
-                      : lastOutput}
-                  </p>
-                </div>
-              ))}
+              <div className="flex flex-col-reverse">
+                <Suspense
+                  fallback={
+                    <p className="font-bold text-2xl text-white">Loading....</p>
+                  }
+                >
+                  {userMessages?.map(
+                    (userMessage: MessagesData, index = +userMessage.id) => (
+                      <div key={index}>
+                        <p className="px-4 py-6 bg-blue-0 text-white rounded-3xl my-6">
+                          {userMessage.messageContent}
+                        </p>
+                        <p className="px-4 py-6 bg-blue-1 text-white rounded-3xl">
+                          <Suspense
+                            fallback={
+                              <p className="font-bold text-white">....</p>
+                            }
+                          >
+                            {aiMessages &&
+                              aiMessages[index] &&
+                              aiMessages[index].messageContent}
+                          </Suspense>
+                        </p>
+                      </div>
+                    )
+                  )}
+                </Suspense>
+              </div>
+              {/* {userMessages!?.length > 0 && */}
+              <div className="flex flex-col">
+                {messages.user?.map((userMessage: string, index) => (
+                  <div key={index}>
+                    <p className="px-4 py-6 bg-blue-0 text-white rounded-3xl my-6">
+                      {userMessage}
+                    </p>
+                    <p className="px-4 py-6 bg-blue-1 text-white rounded-3xl">
+                      {messages.ai[index]
+                        ? messages.ai && messages.ai[index]
+                        : lastOutput}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+          <div>
+            <div className="static mb-16">
+              <div className="relative flex flex-col">
+                <button
+                  onClick={() => {
+                    submit ? null : handleSubmit();
+                  }}
+                  disabled={submit}
+                  className={`absolute right-0 top-[3.9rem] bg-blue-2 text-white py-2 px-4 rounded-full mr-4 mt-2 z-10 ${
+                    submit || !isCreator
+                      ? "opacity-90 bg-blue-4 cursor-not-allowed"
+                      : ""
+                  }`}
+                >
+                  Submit
+                </button>
+                <textarea
+                  rows={4}
+                  name="comment"
+                  id="comment"
+                  value={userInput}
+                  disabled={submit || !isCreator}
+                  placeholder="Send a message"
+                  // add scrollbar-gutter property once available
+                  className={`w-full p-2 shadow-sm focus:ring-blue-3 pr-24 z-15 resize-none focus:border-blue-3 block text-black sm:text-sm border-gray-300 rounded-md mt-10 overflow-visible ${
+                    submit || !isCreator
+                      ? "bg-slate-200 opacity-80 cursor-not-allowed"
+                      : ""
+                  }`}
+                  onChange={(e) => setUserInput(e.target.value)}
+                  data-testid="slug-input"
+                />
+              </div>
             </div>
           </div>
         </div>
-        <div>
-          <div className="static mb-16">
-            <div className="relative flex flex-col">
-              <button
-                onClick={() => {
-                  submit ? null : handleSubmit();
-                }}
-                disabled={submit}
-                className={`absolute right-0 top-[3.9rem] bg-blue-2 text-white py-2 px-4 rounded-full mr-2 mt-2 z-10 ${
-                  submit || !isCreator
-                    ? "opacity-90 bg-blue-4 cursor-not-allowed"
-                    : ""
-                }`}
-              >
-                Submit
-              </button>
-              <textarea
-                rows={4}
-                name="comment"
-                id="comment"
-                value={userInput}
-                disabled={submit || !isCreator}
-                placeholder="Send a message"
-                className={`w-full p-2 shadow-sm focus:ring-blue-3 z-15 resize-none focus:border-blue-3 block text-black sm:text-sm border-gray-300 rounded-md mt-10 overflow-visible ${
-                  submit || !isCreator
-                    ? "bg-slate-200 opacity-80 cursor-not-allowed"
-                    : ""
-                }`}
-                onChange={(e) => setUserInput(e.target.value)}
-                data-testid="slug-input"
-              />
-            </div>
-          </div>
-        </div>
-      </div>
+      </Suspense>
     </>
   );
 }

@@ -344,7 +344,7 @@ export default function Chat() {
           <>
             <div className="w-full h-screen mx-auto flex flex-col justify-between max-w-5xl px-8 md:px-24 py-12">
               <div className="flex justify-start flex-col">
-                {messages.user.length === 0 && <Loading />}
+                {/* {messages.user.length === 0 && <Loading />} */}
                 {messages.user?.map((userMessage: string, index) => (
                   <div key={index}>
                     <p className="px-4 py-6 bg-blue-0 text-white rounded-3xl my-6">
@@ -366,7 +366,7 @@ export default function Chat() {
                         submit ? null : handleSubmit();
                       }}
                       disabled={submit}
-                      className={`absolute right-0 top-[3.9rem] bg-blue-2 text-white py-2 px-4 rounded-full mr-2 mt-2 z-10 ${
+                      className={`absolute right-0 top-[3.9rem] bg-blue-2 text-white py-2 px-4 rounded-full mr-4 mt-2 z-10 ${
                         submit ? "opacity-90 bg-blue-4 cursor-not-allowed" : ""
                       }`}
                     >
@@ -379,7 +379,7 @@ export default function Chat() {
                       value={userInput}
                       disabled={submit}
                       placeholder="Send a message"
-                      className={`w-full p-2 shadow-sm focus:ring-blue-3 z-15 resize-none focus:border-blue-3 block text-black sm:text-sm border-gray-300 rounded-md mt-10 overflow-visible ${
+                      className={`w-full p-2 shadow-sm focus:ring-blue-3 pr-24 z-15 resize-none focus:border-blue-3 block text-black sm:text-sm border-gray-300 rounded-md mt-10 overflow-visible ${
                         submit
                           ? "bg-slate-200 opacity-80 cursor-not-allowed"
                           : ""

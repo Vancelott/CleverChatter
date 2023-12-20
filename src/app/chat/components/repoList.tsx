@@ -5,7 +5,6 @@ import {
   ArrowLeftCircleIcon,
   ArrowRightCircleIcon,
 } from "@heroicons/react/24/solid";
-import { createContext } from "react";
 import { Repository } from "@/app/types";
 import Loading from "../loading";
 
@@ -28,10 +27,10 @@ export const RepoList = ({
   const paginatedRepos = data.slice(start, end);
 
   return (
-    <nav className="max-h-fit min-w-[17rem] min-h-[29.2rem] overflow-y-visible border-2 border-white rounded-xl">
+    <nav className="min-w-[17rem] min-h-[29.2rem] overflow-y-visible border-2 border-white rounded-xl">
       <ul
         role="list"
-        className={`h-full relative z-0 divide-y divide-gray-200 bg-blue-0 rounded-xl ${
+        className={`flex flex-col h-full relative z-0 divide-y divide-gray-200 bg-blue-0 rounded-xl ${
           paginatedRepos.length === 0 ? "flex items-center justify-center" : ""
         }`}
       >
@@ -43,7 +42,7 @@ export const RepoList = ({
               <li className="text-lg font-semibold text-white max-w-[16rem] text-center px-2">
                 No repositories found. Please ensure your repositories are set
                 to public visibility or check if you have any repositories
-                available.{" "}
+                available.
               </li>
             )}
             {paginatedRepos.map((item: Repository) => (
@@ -74,7 +73,7 @@ export const RepoList = ({
               </li>
             ))}
             {paginatedRepos.length > 0 && (
-              <div className="flex flex-row items-center justify-center font-semibold space-x-2">
+              <li className="flex absolute bg-sky-950 rounded-b-xl inset-x-0 bottom-0 flex-row max-h-[49px] items-center justify-center font-semibold space-x-2">
                 <button
                   className="p-1"
                   onClick={() => {
@@ -94,7 +93,7 @@ export const RepoList = ({
                 >
                   <ArrowRightCircleIcon className="w-10 h-10 text-blue-3" />
                 </button>
-              </div>
+              </li>
             )}
           </>
         )}

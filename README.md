@@ -77,7 +77,7 @@ You can check out the live demo of Cleverchatter at: https://cleverchatter.verce
 ## Upcoming Features
 
 - Select a few random functions and generate questions for them.
-- Create a roadmap-like future in which the user can see what areas need to be improved. 
+- Create a roadmap-like feature in which the user can see what areas need to be improved. 
 
 ## Contributing
 

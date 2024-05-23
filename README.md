@@ -32,7 +32,7 @@ You can check out the live demo of Cleverchatter at: https://cleverchatter.verce
 
 1. Clone the repository:
    ```
-   git clone https://github.com/your-username/cleverchatter.git
+   git clone https://github.com/vancelott/cleverchatter.git
    ```
 
 2. Navigate to the project directory:

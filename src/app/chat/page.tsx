@@ -93,7 +93,7 @@ export default function Chat() {
   };
 
   const sendData = async (initialInput: string) => {
-    let currentReply = "";
+    let currentReply: string = "";
 
     if (clickCount === 0) {
       setMessages((prev) => ({
@@ -110,8 +110,7 @@ export default function Chat() {
 
       // atobContent();
       for await (const chunk of response) {
-        console.log(chunk);
-        const text = chunk.candidates[0].content.parts[0].text as string;
+        const text: string = chunk?.candidates?.[0]?.content?.parts?.[0]?.text!;
         currentReply = text;
         setLastOutput((prev) => prev + text);
       }
@@ -128,7 +127,7 @@ export default function Chat() {
   };
 
   const handleInputSubmit = async () => {
-    let currentReply = "";
+    let currentReply: string = "";
 
     try {
       setLastOutput("");
@@ -139,7 +138,7 @@ export default function Chat() {
 
       // atobContent();
       for await (const chunk of response) {
-        const text = chunk.candidates[0].content.parts[0].text as string;
+        const text: string = chunk?.candidates?.[0]?.content?.parts?.[0]?.text!;
         currentReply = text;
         setLastOutput((prev) => prev + text);
       }

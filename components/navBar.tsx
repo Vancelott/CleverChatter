@@ -27,10 +27,7 @@ const NavBar = ({ currentUser }: { currentUser: User }) => {
   // function to close the profile menu when clicked outside of it
   useEffect(() => {
     function handleClickOutside(event: MouseEvent): void {
-      if (
-        profileRef.current &&
-        !profileRef.current.contains(event.target as Node)
-      ) {
+      if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
         setHideProfile(true);
       }
     }
@@ -166,7 +163,7 @@ const NavBar = ({ currentUser }: { currentUser: User }) => {
                   <>
                     <div className="flex gap-2 items-center justify-start bg-slate-700 py-2 px-4 rounded-2xl w-full">
                       <p className="text-white-0 font-medium text-lg whitespace-nowrap">
-                        Welcome, {user?.name}
+                        Welcome, {user ? `${user.name}` : "user"}
                       </p>
                     </div>
                     <button
@@ -186,12 +183,7 @@ const NavBar = ({ currentUser }: { currentUser: User }) => {
               href="/"
               className="text-blue-2 sm:mr-4 font-bold text-xl max-w-[10rem] max-h-[10rem]"
             >
-              <Image
-                priority={true}
-                src={cleverchatterLogo}
-                alt="Logo"
-                className=""
-              />
+              <Image priority={true} src={cleverchatterLogo} alt="Logo" className="" />
             </a>
             {/* <div className="text-white hidden md:flex items-center space-x-6 text-md font-semibold cursor-pointer">
               <a href="/services" className="hover:text-blue-3">

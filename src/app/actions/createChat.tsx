@@ -5,11 +5,7 @@ import getCurrentUser from "./getCurrentUser";
 import getSession from "./getSession";
 import slugify from "slugify";
 
-const CreateChat = async (
-  userInput: string,
-  aiOutput: string,
-  repo: string
-) => {
+const CreateChat = async (userInput: string, aiOutput: string, repo: string) => {
   try {
     if (!userInput || !aiOutput) {
       console.error("Missing userInput/ aiOutput in createChat.");
@@ -17,7 +13,7 @@ const CreateChat = async (
 
     const currentUser = await getCurrentUser();
 
-    const title = aiOutput.substring(1, 45);
+    const title = aiOutput.substring(0, 45);
 
     const slugifiedTitle = slugify(title, {
       strict: true,
@@ -80,8 +76,6 @@ const CreateChat = async (
       },
     });
 
-    console.log(newConversation);
-    // console.log(newMessage);
     return newChat;
   } catch (error: any) {
     console.log("createChat error:", error);

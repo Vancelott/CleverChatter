@@ -12,7 +12,6 @@ export const Landing = ({ currentUser }: { currentUser: User }) => {
   const { setHideProfile } = useProfileStore();
 
   const handleStart = () => {
-    setHideProfile(true);
     if (user) {
       router.push("/chat");
     } else {
@@ -37,12 +36,12 @@ export const Landing = ({ currentUser }: { currentUser: User }) => {
             Up your preparation to the next level with us
           </h2>
           <h3 className="mt-4 text-xl font-medium text-gray-200 sm:mt-3">
-            Let our AI companion guide you through your projects, providing
-            smart questions and innovative solutions. Join thousands of users
-            who trust our platform.
+            Let our AI companion guide you through your projects, providing smart
+            questions and innovative solutions. Join thousands of users who trust our
+            platform.
           </h3>
           <button className="mt-10 bg-blue-2 px-3 py-3 rounded-xl text-white font-semibold text-xl hover:bg-blue-1 transition-bg-color duration-300">
-            <a onClick={handleStart} data-testid="start-button">
+            <a onClick={() => handleStart()} data-testid="start-button">
               Start now
             </a>
           </button>

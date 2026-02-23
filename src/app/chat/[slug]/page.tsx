@@ -2,16 +2,12 @@
 
 import GetMessages from "@/app/actions/getMessages";
 import { Suspense, useEffect, useState } from "react";
-import { HfInference } from "@huggingface/inference";
+import ai from "../../libs/gemini";
 import UpdateChat from "@/app/actions/updateChat";
 import { MessagesData, CurrentMessages } from "../../types";
 import GetTotalMessages from "@/app/actions/getTotalMessages";
 import { useInView } from "react-intersection-observer";
 import toast, { Toaster } from "react-hot-toast";
-
-const hfToken = process.env.HF_ACCESS_TOKEN;
-
-const hf = new HfInference(process.env.HF_ACCESS_TOKEN);
 
 interface SlugPageProps {
   params: { slug: string; isCreator: boolean };
@@ -26,7 +22,7 @@ export default function Slug({ params }: SlugPageProps) {
 
   const [userInput, setUserInput] = useState("");
   const [currentOutput, setCurrentOutput] = useState("");
-  const [lastOutput, setLastOutput] = useState<string[]>([""]);
+  const [lastOutput, setLastOutput] = useState<string>("");
   const [submit, setSubmit] = useState(false);
   const [isCreator, setIsCreator] = useState(params.isCreator);
 
@@ -34,7 +30,6 @@ export default function Slug({ params }: SlugPageProps) {
     ai: [],
     user: [],
   });
-
   const [page, setPage] = useState(1);
   const [prevPage, setPrevPage] = useState(1);
   const [totalMessages, setTotalMessages] = useState<number>(0);
@@ -50,69 +45,6 @@ export default function Slug({ params }: SlugPageProps) {
       setTotalMessages(data);
     });
   }, [chatSlug]);
-
-  const handleInputSubmit = async () => {
-    setLastOutput([]);
-    setMessages((prev) => ({
-      ...prev,
-      user: [...prev.user, userInput],
-    }));
-    try {
-      for await (const output of hf.textGenerationStream(
-        {
-          model: "tiiuae/falcon-7b-instruct",
-          inputs: userInput,
-          parameters: {
-            max_new_tokens: 1024,
-            return_full_text: false,
-            truncate: 1000,
-            top_k: 50,
-            repetition_penalty: 1.2,
-            top_p: 0.95,
-            temperature: 0.9,
-          },
-        },
-        {
-          use_cache: false,
-          wait_for_model: true,
-        }
-      ))
-        if (output.token.text !== "<|endoftext|>") {
-          const outputData = [output.token.text];
-
-          setLastOutput((prevState) => [...prevState, ...outputData]);
-        } else {
-          if (output.generated_text) {
-            setCurrentOutput(output.generated_text as string);
-          }
-          setMessages((prev) => ({
-            ...prev,
-            ai: [...prev.ai, output.generated_text!],
-          }));
-        }
-    } catch (error) {
-      console.log(error);
-    } finally {
-      setLastOutput([]);
-    }
-
-    return currentOutput;
-  };
-
-  const handleSubmit = async () => {
-    if (userInput.length > 0 && submit === false) {
-      setSubmit(true);
-      try {
-        await handleInputSubmit();
-      } catch (error) {
-        console.log("Error during submit:", error);
-      } finally {
-        setSubmit(false);
-      }
-    } else {
-      toast.error("Please type in a message.");
-    }
-  };
 
   // runs once the full response from the ai is available - the last token
   useEffect(() => {
@@ -187,20 +119,64 @@ export default function Slug({ params }: SlugPageProps) {
     totalPages,
   ]);
 
+  const handleInputSubmit = async () => {
+    let currentReply = "";
+
+    try {
+      setLastOutput("");
+      const response = await ai.models.generateContentStream({
+        model: "gemini-2.5-flash",
+        contents: userInput,
+      });
+
+      // atobContent();
+      for await (const chunk of response) {
+        const text = chunk.candidates[0].content.parts[0].text as string;
+        currentReply = text;
+        setLastOutput((prev) => prev + text);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+    setCurrentOutput(lastOutput);
+    setMessages((prev) => ({
+      user: [...prev.user, userInput],
+      ai: [...prev.ai, currentReply],
+    }));
+
+    return currentOutput;
+  };
+
+  const handleSubmit = async () => {
+    setUserInput("");
+    if (userInput.length > 0 && submit === false) {
+      setSubmit(true);
+      try {
+        await handleInputSubmit();
+      } catch (error) {
+        console.log("Error during submit:", error);
+      } finally {
+        setSubmit(false);
+      }
+    } else {
+      toast.error("Please type in a message.");
+    }
+  };
+
+  useEffect(() => {
+    console.log(messages);
+  }, [messages]);
+
   return (
     <>
-      <Suspense
-        fallback={<p className="font-bold text-2xl text-white">Loading....</p>}
-      >
-        <div className="w-full h-screen px-4 mx-auto flex flex-col justify-between max-w-5xl my-6">
+      <Suspense fallback={<p className="font-bold text-2xl text-white">Loading....</p>}>
+        <div className="w-full h-screen px-20 mx-auto flex flex-col justify-between max-w-5xl my-6">
           <div className="flex justify-start flex-col">
             <div ref={myRef}></div>
             <div className="flex flex-col">
               <div className="flex flex-col-reverse">
                 <Suspense
-                  fallback={
-                    <p className="font-bold text-2xl text-white">Loading....</p>
-                  }
+                  fallback={<p className="font-bold text-2xl text-white">Loading....</p>}
                 >
                   {userMessages?.map(
                     (userMessage: MessagesData, index = +userMessage.id) => (
@@ -210,9 +186,7 @@ export default function Slug({ params }: SlugPageProps) {
                         </p>
                         <p className="px-4 py-6 bg-blue-1 text-white rounded-3xl">
                           <Suspense
-                            fallback={
-                              <p className="font-bold text-white">....</p>
-                            }
+                            fallback={<p className="font-bold text-white">....</p>}
                           >
                             {aiMessages &&
                               aiMessages[index] &&
@@ -220,7 +194,7 @@ export default function Slug({ params }: SlugPageProps) {
                           </Suspense>
                         </p>
                       </div>
-                    )
+                    ),
                   )}
                 </Suspense>
               </div>
@@ -242,7 +216,8 @@ export default function Slug({ params }: SlugPageProps) {
             </div>
           </div>
           <div>
-            <div className="static mb-16">
+            {/* <div className="absolute inset-x-0 bottom-0 p-32 mt-10"> */}
+            <div className="static mb-16 mt-20">
               <div className="relative flex flex-col">
                 <button
                   onClick={() => {
@@ -250,9 +225,7 @@ export default function Slug({ params }: SlugPageProps) {
                   }}
                   disabled={submit}
                   className={`absolute right-0 top-[3.9rem] bg-blue-2 text-white py-2 px-4 rounded-full mr-4 mt-2 z-10 ${
-                    submit || !isCreator
-                      ? "opacity-90 bg-blue-4 cursor-not-allowed"
-                      : ""
+                    submit || !isCreator ? "opacity-90 bg-blue-4 cursor-not-allowed" : ""
                   }`}
                 >
                   Submit
@@ -271,6 +244,9 @@ export default function Slug({ params }: SlugPageProps) {
                       : ""
                   }`}
                   onChange={(e) => setUserInput(e.target.value)}
+                  // onKeyDown={() => {
+                  //   submit ? null : handleSubmit();
+                  // }}
                   data-testid="slug-input"
                 />
               </div>

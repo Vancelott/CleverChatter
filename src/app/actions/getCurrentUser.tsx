@@ -22,7 +22,6 @@ const getCurrentUser = async () => {
       console.log("No currentUser in getCurrentUser");
       return null;
     }
-
     return currentUser;
   } catch (error: any) {
     return null;

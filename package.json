@@ -12,8 +12,9 @@
     "test:e2e:run": "cypress run"
   },
   "dependencies": {
+    "@google/genai": "^1.41.0",
     "@heroicons/react": "^2.0.18",
-    "@huggingface/inference": "^2.6.4",
+    "@huggingface/inference": "^4.13.12",
     "@next-auth/prisma-adapter": "^1.0.7",
     "@octokit/rest": "^20.0.2",
     "@xenova/transformers": "^2.7.0",

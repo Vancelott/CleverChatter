@@ -2,11 +2,11 @@
 
 ![cleverchatter readme cover](https://github.com/Vancelott/CleverChatter/assets/129599049/c292d8e4-fdcb-4529-8b47-2632d6f5b4cb)
 
-CleverChatter is an AI-powered GitHub repository crawler designed to assist users in preparing for technical interviews. Leveraging TypeScript, Next.js, Tailwind CSS, MongoDB, Prisma, NextAuth, Hugging Face.js, Octokit and Framer Motion, this project provides a unique approach to generating insightful questions based on the code of a selected GitHub project.
+CleverChatter is an AI-powered GitHub repository crawler designed to assist users in preparing for technical interviews. It's built with TypeScript, Next.js, Tailwind CSS, MongoDB, Prisma, NextAuth, Gemini (was previously using Hugging Face.js), Octokit and Framer Motion. This project's purpose is to provide a unique approach to generating insightful questions based on the code of a user's selected GitHub project.
 
 ## Note:
 
-CleverChatter is currently operating with limited functionality due to the unavailability of free AI models capable of generating both code and coding-related questions and being conversational at the same time. Once possible, the model will be switched out to one which meets the aforementioned requirements.
+CleverChatter is currently operating with limited functionality due to the rate limiting of both Octokit and Gemini, as it aims to remain completely free of cost.
 
 ## Live Preview
 
@@ -31,21 +31,25 @@ You can check out the live demo of Cleverchatter at: https://cleverchatter.verce
 ## Getting Started
 
 1. Clone the repository:
+
    ```
    git clone https://github.com/vancelott/cleverchatter.git
    ```
 
 2. Navigate to the project directory:
+
    ```
    cd cleverchatter
    ```
 
 3. Install dependencies:
+
    ```
    npm install
    ```
 
 4. Configure MongoDB:
+
    - Create a MongoDB database and obtain the connection URI.
    - Update the connection URI in the `.env` file.
 
@@ -55,6 +59,7 @@ You can check out the live demo of Cleverchatter at: https://cleverchatter.verce
    - Update the NextAuth configuration in the nextauth.js file with your OAuth credentials.
 
 6. Start the development server:
+
    ```
    npm run dev
    ```
@@ -77,7 +82,7 @@ You can check out the live demo of Cleverchatter at: https://cleverchatter.verce
 ## Upcoming Features
 
 - Select a few random functions and generate questions for them.
-- Create a roadmap-like feature in which the user can see what areas need to be improved. 
+- Create a roadmap-like feature in which the user can see what areas need to be improved.
 
 ## Contributing
 

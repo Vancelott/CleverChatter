@@ -22,7 +22,7 @@ export default function Slug({ params }: SlugPageProps) {
 
   const [userInput, setUserInput] = useState("");
   const [currentOutput, setCurrentOutput] = useState("");
-  const [lastOutput, setLastOutput] = useState<string>("");
+  const [lastOutput, setLastOutput] = useState("");
   const [submit, setSubmit] = useState(false);
   const [isCreator, setIsCreator] = useState(params.isCreator);
 
@@ -32,7 +32,7 @@ export default function Slug({ params }: SlugPageProps) {
   });
   const [page, setPage] = useState(1);
   const [prevPage, setPrevPage] = useState(1);
-  const [totalMessages, setTotalMessages] = useState<number>(0);
+  const [totalMessages, setTotalMessages] = useState(0);
 
   const [firstRun, setFirstRun] = useState(true);
   const [allMessagesFetched, setAllMessagesFetched] = useState(false);
@@ -125,20 +125,20 @@ export default function Slug({ params }: SlugPageProps) {
     try {
       setLastOutput("");
       const response = await ai.models.generateContentStream({
-        model: "gemini-2.5-flash",
+        model: "gemini-2.5-flash-lite",
         contents: userInput,
       });
 
       // atobContent();
       for await (const chunk of response) {
         const text: string = chunk?.candidates?.[0]?.content?.parts?.[0]?.text!;
-        currentReply = text;
+        currentReply = currentReply + text;
         setLastOutput((prev) => prev + text);
       }
     } catch (error) {
       console.log(error);
     }
-    setCurrentOutput(lastOutput);
+    setCurrentOutput(currentReply);
     setMessages((prev) => ({
       user: [...prev.user, userInput],
       ai: [...prev.ai, currentReply],
@@ -148,7 +148,6 @@ export default function Slug({ params }: SlugPageProps) {
   };
 
   const handleSubmit = async () => {
-    setUserInput("");
     if (userInput.length > 0 && submit === false) {
       setSubmit(true);
       try {
@@ -161,16 +160,13 @@ export default function Slug({ params }: SlugPageProps) {
     } else {
       toast.error("Please type in a message.");
     }
+    // setUserInput("");
   };
-
-  useEffect(() => {
-    console.log(messages);
-  }, [messages]);
 
   return (
     <>
       <Suspense fallback={<p className="font-bold text-2xl text-white">Loading....</p>}>
-        <div className="w-full h-screen px-20 mx-auto flex flex-col justify-between max-w-5xl my-6">
+        <div className="w-full h-screen grow px-20 mx-auto flex flex-col justify-between max-w-5xl my-6">
           <div className="flex justify-start flex-col">
             <div ref={myRef}></div>
             <div className="flex flex-col">
@@ -216,7 +212,7 @@ export default function Slug({ params }: SlugPageProps) {
             </div>
           </div>
           <div>
-            {/* <div className="absolute inset-x-0 bottom-0 p-32 mt-10"> */}
+            {/* <div className="absolute inset-x-0 bottom-0 px-48 py-10 mt-10"> */}
             <div className="static mb-16 mt-20">
               <div className="relative flex flex-col">
                 <button
@@ -238,15 +234,12 @@ export default function Slug({ params }: SlugPageProps) {
                   disabled={submit || !isCreator}
                   placeholder="Send a message"
                   // add scrollbar-gutter property once available
-                  className={`w-full p-2 shadow-sm focus:ring-blue-3 pr-24 z-15 resize-none focus:border-blue-3 block text-black sm:text-sm border-gray-300 rounded-md mt-10 overflow-visible ${
+                  className={`w-full p-2 shadow-sm focus:ring-blue-3 pr-24 z-15 resize-none focus:border-blue-3 block text-black sm:text-sm bg-gray-100 border-gray-300 rounded-md mt-10 overflow-visible ${
                     submit || !isCreator
                       ? "bg-slate-200 opacity-80 cursor-not-allowed"
                       : ""
                   }`}
                   onChange={(e) => setUserInput(e.target.value)}
-                  // onKeyDown={() => {
-                  //   submit ? null : handleSubmit();
-                  // }}
                   data-testid="slug-input"
                 />
               </div>

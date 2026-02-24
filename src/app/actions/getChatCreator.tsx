@@ -5,8 +5,6 @@ const GetChatCreator = async (slug: string) => {
   try {
     const currentUser = await getCurrentUser();
 
-    console.log("current slug in chatcreator:", slug);
-
     if (!currentUser) {
       console.log("No currentUser found in GetChatCreator.");
       return null;

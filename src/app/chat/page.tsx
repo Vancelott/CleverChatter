@@ -15,13 +15,12 @@ import Loading from "./loading";
 export default function Chat() {
   const [data, setData] = useState<Repository[]>([]);
 
-  const [submit, setSubmit] = useState<boolean>(false);
-  const [username, setUsername] = useState<string>("");
+  const [submit, setSubmit] = useState(false);
+  const [username, setUsername] = useState("");
 
-  const [userInput, setUserInput] = useState<string>("");
-  const [currentOutput, setCurrentOutput] = useState<string>("");
-  // const [lastOutput, setLastOutput] = useState<string[]>([""]);
-  const [lastOutput, setLastOutput] = useState<string>("");
+  const [userInput, setUserInput] = useState("");
+  const [currentOutput, setCurrentOutput] = useState("");
+  const [lastOutput, setLastOutput] = useState("");
   const [messages, setMessages] = useState<CurrentMessages>({
     ai: [],
     user: [],
@@ -95,12 +94,6 @@ export default function Chat() {
   const sendData = async (initialInput: string) => {
     let currentReply: string = "";
 
-    if (clickCount === 0) {
-      setMessages((prev) => ({
-        ...prev,
-        user: [...prev.user, firstUserPrompt],
-      }));
-    }
     try {
       setLastOutput("");
       const response = await ai.models.generateContentStream({
@@ -111,15 +104,15 @@ export default function Chat() {
       // atobContent();
       for await (const chunk of response) {
         const text: string = chunk?.candidates?.[0]?.content?.parts?.[0]?.text!;
-        currentReply = text;
+        currentReply = currentReply + text;
         setLastOutput((prev) => prev + text);
       }
     } catch (error) {
       console.log(error);
     }
-    setCurrentOutput(lastOutput);
+    setCurrentOutput(currentReply);
     setMessages((prev) => ({
-      ...prev,
+      user: clickCount === 0 ? [...prev.user, firstUserPrompt] : prev.user,
       ai: [...prev.ai, currentReply],
     }));
 
@@ -139,13 +132,13 @@ export default function Chat() {
       // atobContent();
       for await (const chunk of response) {
         const text: string = chunk?.candidates?.[0]?.content?.parts?.[0]?.text!;
-        currentReply = text;
+        currentReply = currentReply + text;
         setLastOutput((prev) => prev + text);
       }
     } catch (error) {
       console.log(error);
     }
-    setCurrentOutput(lastOutput);
+    setCurrentOutput(currentReply);
     setMessages((prev) => ({
       user: [...prev.user, userInput],
       ai: [...prev.ai, currentReply],
@@ -223,6 +216,13 @@ export default function Chat() {
                       {userMessage}
                     </p>
                     <p className="px-4 py-6 bg-blue-1 text-white rounded-3xl">
+                      {/* {messages.ai[index] ? (
+                        messages.ai && messages.ai[index]
+                      ) : lastOutput.length > 0 ? (
+                        lastOutput
+                      ) : (
+                        <Loading />
+                      )} */}
                       {messages.ai[index]
                         ? messages.ai && messages.ai[index]
                         : lastOutput}
@@ -230,7 +230,7 @@ export default function Chat() {
                   </div>
                 ))}
               </div>
-              {messages.user.length > 0 && (
+              {(selectedChildRepo || messages.user.length > 0) && (
                 <div className="static mb-16">
                   <div className="relative flex flex-col">
                     <button

@@ -13,7 +13,7 @@ export default async function SlugLayout({
   const isCreator = await GetChatCreator(slug);
 
   return (
-    <div className="h-screen w-full px-4 md:px-24 py-12 bg-blue-00 overflow-auto">
+    <div className="h-full w-full px-4 md:px-24 pt-12 pb-2 bg-blue-00 overflow-auto">
       <Slug params={{ slug, isCreator: isCreator! }} />
     </div>
   );

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { Suspense, useEffect, useRef, useState } from "react";
 import octokit from "../libs/octokit";
 import ai from "../libs/gemini";
 import { RepoList } from "./components/repoList";
@@ -93,6 +93,10 @@ export default function Chat() {
 
   const sendData = async (initialInput: string) => {
     let currentReply: string = "";
+    setMessages((prev) => ({
+      ...prev,
+      user: clickCount === 0 ? [...prev.user, firstUserPrompt] : prev.user,
+    }));
 
     try {
       setLastOutput("");
@@ -112,7 +116,7 @@ export default function Chat() {
     }
     setCurrentOutput(currentReply);
     setMessages((prev) => ({
-      user: clickCount === 0 ? [...prev.user, firstUserPrompt] : prev.user,
+      ...prev,
       ai: [...prev.ai, currentReply],
     }));
 
@@ -183,83 +187,84 @@ export default function Chat() {
       <div className="px-4 mx-auto flex flex-col max-w-5xl bottom-0">
         {!hideList && (
           <>
-            <div className="flex flex-col justify-center items-center bg-blue-00 h-screen my-10 mx-auto relative py-32 z-10">
-              <p className="font-extrabold text-5xl pb-4 whitespace-nowrap">
-                Your repositories
-              </p>
-              <p className="font-semibold text-xl pb-4">
-                Choose a repository to prepare on
-              </p>
-              <RepoList data={data} handleCallback={getSelectedRepo} />
-              <button
-                onClick={() => (selectedChildRepo ? handleRepoSubmit() : undefined)}
-                disabled={!selectedChildRepo}
-                className={`mt-10 bg-blue-2 px-3 py-3 rounded-xl text-white-1 font-medium text-xl hover:bg-blue-1 transition-bg-color duration-300 ${
-                  !selectedChildRepo
-                    ? "cursor-not-allowed bg-blue-1 opacity-70 text-gray-200"
-                    : ""
-                }`}
-              >
-                Submit
-              </button>
-            </div>
+            <Suspense fallback={<Loading />}>
+              <div className="flex flex-col justify-center items-center bg-blue-00 h-screen my-10 mx-auto relative py-32 z-10">
+                <p className="font-extrabold text-5xl pb-4 whitespace-nowrap">
+                  Your repositories
+                </p>
+                <p className="font-semibold text-xl pb-4">
+                  Choose a repository to prepare on
+                </p>
+                <RepoList data={data} handleCallback={getSelectedRepo} />
+                <button
+                  onClick={() => (selectedChildRepo ? handleRepoSubmit() : undefined)}
+                  disabled={!selectedChildRepo}
+                  className={`mt-10 bg-blue-2 px-3 py-3 rounded-xl text-white-1 font-medium text-xl hover:bg-blue-1 transition-bg-color duration-300 ${
+                    !selectedChildRepo
+                      ? "cursor-not-allowed bg-blue-1 opacity-70 text-gray-200"
+                      : ""
+                  }`}
+                >
+                  Submit
+                </button>
+              </div>
+            </Suspense>
           </>
         )}
         {hideList && (
           <>
-            <div className="w-full h-screen mx-auto flex flex-col justify-between max-w-5xl px-8 md:px-24 py-12">
-              <div className="flex justify-start flex-col">
-                {/* {messages.user.length === 0 && <Loading />} */}
-                {messages.user?.map((userMessage: string, index) => (
-                  <div key={index}>
-                    <p className="px-4 py-6 bg-blue-0 text-white rounded-3xl my-6">
-                      {userMessage}
-                    </p>
-                    <p className="px-4 py-6 bg-blue-1 text-white rounded-3xl">
-                      {/* {messages.ai[index] ? (
-                        messages.ai && messages.ai[index]
-                      ) : lastOutput.length > 0 ? (
-                        lastOutput
-                      ) : (
-                        <Loading />
-                      )} */}
-                      {messages.ai[index]
-                        ? messages.ai && messages.ai[index]
-                        : lastOutput}
-                    </p>
-                  </div>
-                ))}
-              </div>
-              {(selectedChildRepo || messages.user.length > 0) && (
-                <div className="static mb-16">
-                  <div className="relative flex flex-col">
-                    <button
-                      onClick={() => {
-                        submit ? null : handleInputSubmit();
-                      }}
-                      disabled={submit}
-                      className={`absolute right-0 top-[3.9rem] bg-blue-2 text-white py-2 px-4 rounded-full mr-4 mt-2 z-10 ${
-                        submit ? "opacity-90 bg-blue-4 cursor-not-allowed" : ""
-                      }`}
-                    >
-                      Submit
-                    </button>
-                    <textarea
-                      rows={4}
-                      name="comment"
-                      id="comment"
-                      value={userInput}
-                      disabled={submit}
-                      placeholder="Send a message"
-                      className={`w-full p-2 shadow-sm focus:ring-blue-3 pr-24 z-15 resize-none focus:border-blue-3 block text-black sm:text-sm border-gray-300 rounded-md mt-10 overflow-visible ${
-                        submit ? "bg-slate-200 opacity-80 cursor-not-allowed" : ""
-                      }`}
-                      onChange={(e) => setUserInput(e.target.value)}
-                    />
-                  </div>
+            <Suspense fallback={<Loading />}>
+              <div className="w-full h-screen mx-auto flex flex-col justify-between max-w-5xl px-8 md:px-24 py-12">
+                <div className="flex justify-start flex-col">
+                  {messages.user.length === 0 && <Loading />}
+                  {messages.user?.map((userMessage: string, index) => (
+                    <div key={index}>
+                      <p className="px-4 py-6 bg-blue-0 text-white rounded-3xl my-6">
+                        {userMessage}
+                      </p>
+                      <div className="px-4 py-6 bg-blue-1 text-white rounded-3xl">
+                        {messages.ai[index] ? (
+                          messages.ai[index]
+                        ) : lastOutput.length > 0 ? (
+                          lastOutput
+                        ) : (
+                          <Loading />
+                        )}
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              )}
-            </div>
+                {(selectedChildRepo || messages.user.length > 0) && (
+                  <div className="static mb-16">
+                    <div className="relative flex flex-col">
+                      <button
+                        onClick={() => {
+                          submit ? null : handleInputSubmit();
+                        }}
+                        disabled={submit}
+                        className={`absolute right-0 top-[3.9rem] bg-blue-2 text-white py-2 px-4 rounded-full mr-4 mt-2 z-10 ${
+                          submit ? "opacity-90 bg-blue-4 cursor-not-allowed" : ""
+                        }`}
+                      >
+                        Submit
+                      </button>
+                      <textarea
+                        rows={4}
+                        name="comment"
+                        id="comment"
+                        value={userInput}
+                        disabled={submit}
+                        placeholder="Send a message"
+                        className={`w-full p-2 shadow-sm focus:ring-blue-3 pr-24 z-15 resize-none focus:border-blue-3 block text-black sm:text-sm border-gray-300 rounded-md mt-10 overflow-visible ${
+                          submit ? "bg-slate-200 opacity-80 cursor-not-allowed" : ""
+                        }`}
+                        onChange={(e) => setUserInput(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+            </Suspense>
           </>
         )}
       </div>

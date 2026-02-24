@@ -61,6 +61,7 @@ export const GetRepoContent = async (owner: string, repo: string, path: string) 
   };
 
   const pathData = await fetchItemPaths(`${owner}`, `${repo}`, "");
+  console.log("pathData", pathData);
   const contentData = await fetchContent(`${owner}`, `${repo}`, pathData);
   const decodedRepoContent: string[] = await decodeContent(contentData);
 

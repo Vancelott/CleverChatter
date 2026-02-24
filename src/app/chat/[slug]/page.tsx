@@ -8,6 +8,7 @@ import { MessagesData, CurrentMessages } from "../../types";
 import GetTotalMessages from "@/app/actions/getTotalMessages";
 import { useInView } from "react-intersection-observer";
 import toast, { Toaster } from "react-hot-toast";
+import Loading from "../loading";
 
 interface SlugPageProps {
   params: { slug: string; isCreator: boolean };
@@ -165,15 +166,18 @@ export default function Slug({ params }: SlugPageProps) {
 
   return (
     <>
-      <Suspense fallback={<p className="font-bold text-2xl text-white">Loading....</p>}>
+      <Suspense fallback={<Loading />}>
         <div className="w-full h-screen grow px-20 mx-auto flex flex-col justify-between max-w-5xl my-6">
           <div className="flex justify-start flex-col">
             <div ref={myRef}></div>
             <div className="flex flex-col">
               <div className="flex flex-col-reverse">
-                <Suspense
-                  fallback={<p className="font-bold text-2xl text-white">Loading....</p>}
-                >
+                <Suspense fallback={<Loading />}>
+                  {!userMessages && (
+                    <div className="mt-32">
+                      <Loading />
+                    </div>
+                  )}
                   {userMessages?.map(
                     (userMessage: MessagesData, index = +userMessage.id) => (
                       <div key={index}>
@@ -201,11 +205,15 @@ export default function Slug({ params }: SlugPageProps) {
                     <p className="px-4 py-6 bg-blue-0 text-white rounded-3xl my-6">
                       {userMessage}
                     </p>
-                    <p className="px-4 py-6 bg-blue-1 text-white rounded-3xl">
-                      {messages.ai[index]
-                        ? messages.ai && messages.ai[index]
-                        : lastOutput}
-                    </p>
+                    <div className="px-4 py-6 bg-blue-1 text-white rounded-3xl">
+                      {messages.ai[index] ? (
+                        messages.ai[index]
+                      ) : lastOutput.length > 0 ? (
+                        lastOutput
+                      ) : (
+                        <Loading />
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>

@@ -2,12 +2,9 @@ import "../globals.css";
 import type { Metadata } from "next";
 import ChatNav from "./components/chatNav";
 import getCurrentUser from "../actions/getCurrentUser";
+import { ErrorBoundary } from "next/dist/client/components/error-boundary";
 
-export default async function ChatLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default async function ChatLayout({ children }: { children: React.ReactNode }) {
   const currentUser = await getCurrentUser();
 
   return (

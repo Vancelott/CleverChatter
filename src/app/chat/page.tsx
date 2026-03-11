@@ -2,7 +2,6 @@
 
 import React, { Suspense, useEffect, useRef, useState } from "react";
 import octokit from "../libs/octokit";
-import ai from "../libs/gemini";
 import { RepoList } from "./components/repoList";
 import { Repository, CurrentMessages } from "../types";
 import createChat from "../actions/createChat";
@@ -11,6 +10,7 @@ import { useRouter } from "next/navigation";
 import getCurrentUser from "../actions/getCurrentUser";
 import GetRepoContent from "../actions/getRepoContent";
 import Loading from "./loading";
+import toast, { Toaster } from "react-hot-toast";
 
 export default function Chat() {
   const [data, setData] = useState<Repository[]>([]);
@@ -37,7 +37,8 @@ export default function Chat() {
     setSelectedChildRepo(data);
   };
 
-  const firstUserPrompt = `At the end of this paragraph is my project. Help me prepare for an interview by providing me with example questions which I might get asked about this code specifically.`;
+  // const firstUserPrompt = `At the end of this paragraph is my coding project. Help me prepare for an interview by providing me with example questions which I might get asked about this code specifically. For example: 1. Why did you use "X" library? 2. Why not use useRef instead of useState? etc.`;
+  const firstUserPrompt = `At the end of this paragraph is my coding project. Generate 3-5 questions in bullet points that I might get asked in a coding related job interview.`;
 
   // creates chat once the full output from the ai is available
   useEffect(() => {
@@ -88,63 +89,49 @@ export default function Chat() {
   }, [username]);
 
   const createFirstInput = (decodedContent: string[]) => {
-    return `Answer my query in no more than 350 characters. ${firstUserPrompt} ${decodedContent}`;
+    return `Answer the following in 200 words or less: ${firstUserPrompt} """${decodedContent}""" `;
   };
 
-  const sendData = async (initialInput: string) => {
-    let currentReply: string = "";
+  const handleInputSubmit = async (initialInput?: string) => {
+    let currentReply = "";
+    let err = false;
+
+    setLastOutput("");
+
+    const response = await fetch("/api/ai", {
+      method: "POST",
+      body: JSON.stringify(initialInput ? initialInput : userInput),
+    });
+    const reader = response.body?.getReader();
+    const decoder = new TextDecoder();
+    if (reader) {
+      while (true) {
+        const { done, value } = await reader.read();
+        console.log("done, value", done, value);
+        if (done) break;
+        // const decodedData = decoder.decode(value, { stream: true });
+        const decodedData = new TextDecoder().decode(value);
+        console.log("decodedData", decodedData);
+        const parsedData = JSON.parse(decodedData);
+
+        if (parsedData.error) {
+          err = true;
+          setLastOutput((prev) => (prev += parsedData.error.message));
+          currentReply += parsedData.error.message;
+          toast.error(currentReply);
+          break;
+        } else {
+          const text = parsedData.candidates?.[0]?.content?.parts?.[0]?.text!;
+          setLastOutput((prev) => (prev += text));
+          currentReply += text;
+          if (!done) continue;
+        }
+      }
+    }
+
+    if (!err) setCurrentOutput(currentReply);
     setMessages((prev) => ({
       ...prev,
-      user: clickCount === 0 ? [...prev.user, firstUserPrompt] : prev.user,
-    }));
-
-    try {
-      setLastOutput("");
-      const response = await ai.models.generateContentStream({
-        model: "gemini-2.5-flash",
-        contents: initialInput,
-      });
-
-      // atobContent();
-      for await (const chunk of response) {
-        const text: string = chunk?.candidates?.[0]?.content?.parts?.[0]?.text!;
-        currentReply = currentReply + text;
-        setLastOutput((prev) => prev + text);
-      }
-    } catch (error) {
-      console.log(error);
-    }
-    setCurrentOutput(currentReply);
-    setMessages((prev) => ({
-      ...prev,
-      ai: [...prev.ai, currentReply],
-    }));
-
-    return currentOutput;
-  };
-
-  const handleInputSubmit = async () => {
-    let currentReply: string = "";
-
-    try {
-      setLastOutput("");
-      const response = await ai.models.generateContentStream({
-        model: "gemini-2.5-flash",
-        contents: userInput,
-      });
-
-      // atobContent();
-      for await (const chunk of response) {
-        const text: string = chunk?.candidates?.[0]?.content?.parts?.[0]?.text!;
-        currentReply = currentReply + text;
-        setLastOutput((prev) => prev + text);
-      }
-    } catch (error) {
-      console.log(error);
-    }
-    setCurrentOutput(currentReply);
-    setMessages((prev) => ({
-      user: [...prev.user, userInput],
       ai: [...prev.ai, currentReply],
     }));
 
@@ -156,22 +143,24 @@ export default function Chat() {
       setSubmit(true);
       setHideList(true);
       if (clickCount === 0) {
+        setMessages((prev) => ({
+          ...prev,
+          user: [...prev.user, firstUserPrompt],
+        }));
+
         const decodedContent = await GetRepoContent(
           `${username}`,
           `${selectedChildRepo}`,
           "",
         );
         const initialInput = await createFirstInput(decodedContent);
-        // await setMappedContent(decodedContent);
-        await sendData(initialInput);
-        // const pathData = await fetchItemPaths(`${username}`, `${selectedChildRepo}`, "");
-        // const contentData2 = await fetchContent(
-        //   `${username}`,
-        //   `${selectedChildRepo}`,
-        //   pathData,
-        // );
-        // const decodedContent = await decodeContent(contentData2);
+
+        await handleInputSubmit(initialInput);
       } else {
+        setMessages((prev) => ({
+          ...prev,
+          user: [...prev.user, userInput],
+        }));
         await handleInputSubmit();
         setClickCount((prevCount) => prevCount + 1);
       }
@@ -234,7 +223,7 @@ export default function Chat() {
                     </div>
                   ))}
                 </div>
-                {(selectedChildRepo || messages.user.length > 0) && (
+                {(selectedChildRepo || messages.ai.length > 0) && (
                   <div className="static mb-16">
                     <div className="relative flex flex-col">
                       <button

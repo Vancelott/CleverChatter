@@ -1,7 +1,9 @@
+"use server";
+
 import octokit from "../libs/octokit";
 import { ContentData, RepoContent } from "../types";
 
-export const GetRepoContent = async (owner: string, repo: string, path: string) => {
+const GetRepoContent = async (owner: string, repo: string, path: string) => {
   // gets all of the paths within a folder in the repo
   const fetchItemPaths = async (owner: string, repo: string, path: string) => {
     const { data } = await octokit.rest.repos.getContent({
@@ -61,7 +63,6 @@ export const GetRepoContent = async (owner: string, repo: string, path: string) 
   };
 
   const pathData = await fetchItemPaths(`${owner}`, `${repo}`, "");
-  console.log("pathData", pathData);
   const contentData = await fetchContent(`${owner}`, `${repo}`, pathData);
   const decodedRepoContent: string[] = await decodeContent(contentData);
 

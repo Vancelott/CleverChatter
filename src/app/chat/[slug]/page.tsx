@@ -2,7 +2,6 @@
 
 import GetMessages from "@/app/actions/getMessages";
 import { Suspense, useEffect, useState } from "react";
-import ai from "../../libs/gemini";
 import UpdateChat from "@/app/actions/updateChat";
 import { MessagesData, CurrentMessages } from "../../types";
 import GetTotalMessages from "@/app/actions/getTotalMessages";
@@ -94,10 +93,12 @@ export default function Slug({ params }: SlugPageProps) {
                 ...(prev || []),
                 ...data!.AiMessages,
               ]);
+            window.scrollBy(0, 700);
           } else {
             setAllMessagesFetched(true);
           }
         });
+        // TODO get rid of the prevpage state?
         if (prevPage + 1 !== totalPages) {
           setPage((prev) => {
             setPrevPage(prev);
@@ -105,7 +106,8 @@ export default function Slug({ params }: SlugPageProps) {
           });
         }
         // window.scrollTo({
-        //   top: document.documentElement.scrollHeight,
+        //   // top: document.documentElement.scrollHeight,
+        //   top: window.innerHeight,
         //   behavior: "smooth",
         // });
       }
@@ -121,27 +123,45 @@ export default function Slug({ params }: SlugPageProps) {
   ]);
 
   const handleInputSubmit = async () => {
-    let currentReply: string = "";
+    let currentReply = "";
+    let err = false;
 
-    try {
-      setLastOutput("");
-      const response = await ai.models.generateContentStream({
-        model: "gemini-2.5-flash-lite",
-        contents: userInput,
-      });
+    setLastOutput("");
 
-      // atobContent();
-      for await (const chunk of response) {
-        const text: string = chunk?.candidates?.[0]?.content?.parts?.[0]?.text!;
-        currentReply = currentReply + text;
-        setLastOutput((prev) => prev + text);
+    const response = await fetch("/api/ai", {
+      method: "POST",
+      body: JSON.stringify(userInput),
+    });
+    const reader = response.body?.getReader();
+    const decoder = new TextDecoder();
+    if (reader) {
+      while (true) {
+        const { done, value } = await reader.read();
+        console.log("done, value", done, value);
+        if (done) break;
+        // const decodedData = decoder.decode(value, { stream: true });
+        const decodedData = new TextDecoder().decode(value);
+        console.log("decodedData", decodedData);
+        const parsedData = JSON.parse(decodedData);
+
+        if (parsedData.error) {
+          err = true;
+          setLastOutput((prev) => (prev += parsedData.error.message));
+          currentReply += parsedData.error.message;
+          toast.error(currentReply);
+          break;
+        } else {
+          const text = parsedData.candidates?.[0]?.content?.parts?.[0]?.text!;
+          setLastOutput((prev) => (prev += text));
+          currentReply += text;
+          if (!done) continue;
+        }
       }
-    } catch (error) {
-      console.log(error);
     }
-    setCurrentOutput(currentReply);
+
+    if (!err) setCurrentOutput(currentReply);
     setMessages((prev) => ({
-      user: [...prev.user, userInput],
+      ...prev,
       ai: [...prev.ai, currentReply],
     }));
 
@@ -151,6 +171,10 @@ export default function Slug({ params }: SlugPageProps) {
   const handleSubmit = async () => {
     if (userInput.length > 0 && submit === false) {
       setSubmit(true);
+      setMessages((prev) => ({
+        ...prev,
+        user: [...prev.user, userInput],
+      }));
       try {
         await handleInputSubmit();
       } catch (error) {
@@ -161,7 +185,6 @@ export default function Slug({ params }: SlugPageProps) {
     } else {
       toast.error("Please type in a message.");
     }
-    // setUserInput("");
   };
 
   return (

@@ -1,6 +1,5 @@
 "use server";
 
-// import prisma from "@/app/libs/prismadb";
 import { useSession } from "next-auth/react";
 import { prisma } from "../libs/prismadb";
 import GetTotalMessages from "./getTotalMessages";

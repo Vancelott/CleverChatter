@@ -1,10 +1,7 @@
 "use client";
 
 import React, { Suspense, useEffect, useState } from "react";
-import {
-  ArrowLeftCircleIcon,
-  ArrowRightCircleIcon,
-} from "@heroicons/react/24/solid";
+import { ArrowLeftCircleIcon, ArrowRightCircleIcon } from "@heroicons/react/24/solid";
 import { Repository } from "@/app/types";
 import Loading from "../loading";
 
@@ -40,18 +37,15 @@ export const RepoList = ({
           <>
             {paginatedRepos.length === 0 && (
               <li className="text-lg font-semibold text-white max-w-[16rem] text-center px-2">
-                No repositories found. Please ensure your repositories are set
-                to public visibility or check if you have any repositories
-                available.
+                No repositories found. Please ensure your repositories are set to public
+                visibility or check if you have any repositories available.
               </li>
             )}
             {paginatedRepos.map((item: Repository) => (
               <li
                 key={item.id}
-                className={`first:rounded-t-xl hover:bg-blue-4 transition-bg-color duration-300 ${
-                  selectedRepo === item.name
-                    ? "bg-blue-3 text-gray-200"
-                    : "bg-blue-2"
+                className={`first:rounded-t-xl hover:bg-blue-4 hover:cursor-pointer transition-bg-color duration-300 ${
+                  selectedRepo === item.name ? "bg-blue-3 text-gray-200" : "bg-blue-2"
                 }`}
                 value={selectedRepo}
               >
@@ -82,9 +76,7 @@ export const RepoList = ({
                 >
                   <ArrowLeftCircleIcon className="w-10 h-10 text-blue-3" />
                 </button>
-                <p className="text-gray-100 text-xl font-bold px-4 py-1.5 ">
-                  {page}
-                </p>
+                <p className="text-gray-100 text-xl font-bold px-4 py-1.5 ">{page}</p>
                 <button
                   className="p-1"
                   onClick={() => {

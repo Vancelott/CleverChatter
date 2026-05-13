@@ -4,6 +4,8 @@ import type { NextRequest } from "next/server";
 const SendPrompt = async (request: NextRequest) => {
   const req = await request.json();
 
+  // TODO make sure the request doesn't use too many tokens, if it does - split the call into two separate calls? - https://ai.google.dev/api/tokens#v1beta.models.countTokens
+
   const prompt = {
     contents: [
       {
@@ -18,6 +20,18 @@ const SendPrompt = async (request: NextRequest) => {
       maxOutputTokens: 2000,
     },
   };
+
+  // TODO move this call in a separate server action, and just call it here (or just use usage_metadata attribute from the response)
+  // const countTokensResponse = await ai.models.countTokens({
+  //   model: "gemini-2.0-flash",
+  //   contents: req,
+  // });
+
+  //   if (countTokensResponse.totalTokens! > 1_048_576) {
+  //   // flatsix without deflate 2044017
+  //   console.log("Max input tokens reached");
+  //   return;
+  // }
 
   try {
     const response = await fetch(

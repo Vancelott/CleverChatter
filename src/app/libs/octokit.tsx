@@ -1,14 +1,37 @@
-const { Octokit } = require("@octokit/rest");
-const { createAppAuth } = require("@octokit/auth-app");
+import { Octokit } from "@octokit/rest";
+// import { createAppAuth } from "@octokit/auth-app";
+// import { Octokit } from "@octokit/core";
+import { retry } from "@octokit/plugin-retry";
+import { throttling, ThrottlingOptions } from "@octokit/plugin-throttling";
 
-const octokit = new Octokit({
+const MyOctokit = (Octokit as any).plugin(retry, throttling);
+type MyOctokitInstance = InstanceType<typeof MyOctokit>;
+
+const octokit: MyOctokitInstance = new MyOctokit({
+  // TODO add token infront?
   auth: process.env.NEXT_OCTOKIT_SECRET_KEY,
   userAgent: "Vancelott",
-  previews: ["jean-grey", "symmetra"],
-  // timeZone: 'Europe/Sofia',
-  // "Access-Control-Allow-Credentials": true,
   baseUrl: "https://api.github.com",
-  // "Access-Control-Allow-Origin": "http://example.com",
+  throttle: {
+    onRateLimit: (retryAfter, options) => {
+      octokit.log.warn(
+        `Request quota exhausted for request ${options.method} ${options.url}`,
+      );
+
+      if (options.request.retryCount === 0) {
+        // only retries once
+        octokit.log.info(`Retrying after ${retryAfter} seconds!`);
+        return true;
+      }
+    },
+    onSecondaryRateLimit: (retryAfter, options, octokit) => {
+      // does not retry, only logs a warning
+      octokit.log.warn(
+        `Secondary quota detected for request ${options.method} ${options.url}`,
+      );
+      return false;
+    },
+  },
   log: {
     debug: () => {},
     info: () => {},

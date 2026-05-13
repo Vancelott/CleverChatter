@@ -89,7 +89,8 @@ export default function Chat() {
   }, [username]);
 
   const createFirstInput = (decodedContent: string[]) => {
-    return `Answer the following in 200 words or less: ${firstUserPrompt} """${decodedContent}""" `;
+    // return `Answer the following in 200 words or less: ${firstUserPrompt} """${decodedContent}""" `;
+    return `Answer the following in 130 words or less: ${firstUserPrompt}. The questions have to be specific for the code attached after this sentence: """${decodedContent}""" `;
   };
 
   const handleInputSubmit = async (initialInput?: string) => {
@@ -107,11 +108,9 @@ export default function Chat() {
     if (reader) {
       while (true) {
         const { done, value } = await reader.read();
-        console.log("done, value", done, value);
         if (done) break;
         // const decodedData = decoder.decode(value, { stream: true });
         const decodedData = new TextDecoder().decode(value);
-        console.log("decodedData", decodedData);
         const parsedData = JSON.parse(decodedData);
 
         if (parsedData.error) {
@@ -153,6 +152,7 @@ export default function Chat() {
           `${selectedChildRepo}`,
           "",
         );
+
         const initialInput = await createFirstInput(decodedContent);
 
         await handleInputSubmit(initialInput);
@@ -165,7 +165,10 @@ export default function Chat() {
         setClickCount((prevCount) => prevCount + 1);
       }
     } catch (error) {
-      console.log("Error during submit:", error);
+      setSubmit(false);
+      setHideList(false);
+      setUserInput("");
+      toast.error("The repository data could not be fetched. Please try again.");
     } finally {
       setSubmit(false);
     }
@@ -187,12 +190,9 @@ export default function Chat() {
                 <RepoList data={data} handleCallback={getSelectedRepo} />
                 <button
                   onClick={() => (selectedChildRepo ? handleRepoSubmit() : undefined)}
-                  disabled={!selectedChildRepo}
-                  className={`mt-10 bg-blue-2 px-3 py-3 rounded-xl text-white-1 font-medium text-xl hover:bg-blue-1 transition-bg-color duration-300 ${
-                    !selectedChildRepo
-                      ? "cursor-not-allowed bg-blue-1 opacity-70 text-gray-200"
-                      : ""
-                  }`}
+                  disabled={!selectedChildRepo || userInput.length <= 0}
+                  className="mt-10 bg-blue-2 px-3 py-3 rounded-xl text-white-1 font-medium text-xl hover:bg-blue-1 transition-bg-color duration-300 text-gray-200
+                    disabled:hover:cursor-not-allowed disabled:bg-blue-1 disabled:opacity-70"
                 >
                   Submit
                 </button>
@@ -244,9 +244,7 @@ export default function Chat() {
                         value={userInput}
                         disabled={submit}
                         placeholder="Send a message"
-                        className={`w-full p-2 shadow-sm focus:ring-blue-3 pr-24 z-15 resize-none focus:border-blue-3 block text-black sm:text-sm border-gray-300 rounded-md mt-10 overflow-visible ${
-                          submit ? "bg-slate-200 opacity-80 cursor-not-allowed" : ""
-                        }`}
+                        className="w-full p-2 shadow-sm focus:ring-blue-3 pr-24 z-15 resize-none focus:border-blue-3 block text-black sm:text-sm border-gray-300 rounded-md mt-10 overflow-visible disabled:bg-slate-200 disabled:opacity-80 disabled:hover:cursor-not-allowed"
                         onChange={(e) => setUserInput(e.target.value)}
                       />
                     </div>

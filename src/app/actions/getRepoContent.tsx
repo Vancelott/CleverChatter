@@ -6,8 +6,6 @@ import { ContentData, RepoContent } from "../types";
 const GetRepoContent = async (owner: string, repo: string, path: string) => {
   // gets all of the paths within a folder in the repo
   const fetchItemPaths = async (owner: string, repo: string, path: string) => {
-    throw new Error();
-
     const { data } = await octokit.rest.repos.getContent({
       owner,
       repo,

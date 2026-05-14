@@ -3,6 +3,8 @@ import { Octokit } from "@octokit/rest";
 // import { Octokit } from "@octokit/core";
 import { retry } from "@octokit/plugin-retry";
 import { throttling, ThrottlingOptions } from "@octokit/plugin-throttling";
+import type { EndpointDefaults } from "@octokit/types";
+import type { Octokit as OctokitType } from "@octokit/rest";
 
 const MyOctokit = (Octokit as any).plugin(retry, throttling);
 type MyOctokitInstance = InstanceType<typeof MyOctokit>;
@@ -13,18 +15,22 @@ const octokit: MyOctokitInstance = new MyOctokit({
   userAgent: "Vancelott",
   baseUrl: "https://api.github.com",
   throttle: {
-    onRateLimit: (retryAfter, options) => {
+    onRateLimit: (retryAfter: number, options: EndpointDefaults) => {
       octokit.log.warn(
         `Request quota exhausted for request ${options.method} ${options.url}`,
       );
 
-      if (options.request.retryCount === 0) {
+      if (options?.request?.retryCount === 0) {
         // only retries once
         octokit.log.info(`Retrying after ${retryAfter} seconds!`);
         return true;
       }
     },
-    onSecondaryRateLimit: (retryAfter, options, octokit) => {
+    onSecondaryRateLimit: (
+      retryAfter: number,
+      options: EndpointDefaults,
+      octokit: OctokitType,
+    ) => {
       // does not retry, only logs a warning
       octokit.log.warn(
         `Secondary quota detected for request ${options.method} ${options.url}`,

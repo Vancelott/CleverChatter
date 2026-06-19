@@ -9,10 +9,7 @@ import {
   HomeIcon,
   PlusIcon,
 } from "@heroicons/react/24/solid";
-import {
-  ChatBubbleLeftIcon,
-  ChatBubbleLeftRightIcon,
-} from "@heroicons/react/24/outline";
+import { ChatBubbleLeftIcon, ChatBubbleLeftRightIcon } from "@heroicons/react/24/outline";
 import { ChatData, User } from "@/app/types";
 import { isBefore, isToday, subDays } from "date-fns";
 import toast from "react-hot-toast";
@@ -25,9 +22,7 @@ export const ChatNav = ({ currentUser }: { currentUser: User }) => {
 
   const [chatsToday, setChatsToday] = useState<ChatData[]>([]);
   const [chatsYesterday, setChatsYesterday] = useState<ChatData[]>([]);
-  const [chatsPreviousSevenDays, setChatsPreviousSevenDays] = useState<
-    ChatData[]
-  >([]);
+  const [chatsPreviousSevenDays, setChatsPreviousSevenDays] = useState<ChatData[]>([]);
   const [olderChats, setOlderChats] = useState<ChatData[]>([]);
 
   const queryParams = new URLSearchParams("=");
@@ -43,8 +38,8 @@ export const ChatNav = ({ currentUser }: { currentUser: User }) => {
     try {
       const fetchChats = async () => {
         const fetch = await GetAllChats();
-        const result = await fetch;
-        setChats(result!);
+        // const result = await fetch;
+        setChats(fetch ? fetch : []);
       };
       fetchChats();
     } catch (error) {
@@ -105,9 +100,7 @@ export const ChatNav = ({ currentUser }: { currentUser: User }) => {
       >
         <div
           className={`flex flex-col pt-2 pb-4 hover:overflow-y-scroll overflow-hidden w-72 ${
-            chats?.length === 0
-              ? "my-auto"
-              : "items-start justify-start mb-auto"
+            chats?.length === 0 ? "my-auto" : "items-start justify-start mb-auto"
           }`}
         >
           <nav
@@ -119,8 +112,7 @@ export const ChatNav = ({ currentUser }: { currentUser: User }) => {
               <div className="flex items-center justify-center px-4 w-full h-full">
                 <ChatBubbleLeftRightIcon className="h-16 w-16 text-gray-700 relative mb-24" />
                 <p className="text-center text-gray-300 font-medium text-md absolute px-2">
-                  Your chat history is empty. Start a new conversation to see it
-                  here!
+                  Your chat history is empty. Start a new conversation to see it here!
                 </p>
               </div>
             )}
@@ -143,9 +135,7 @@ export const ChatNav = ({ currentUser }: { currentUser: User }) => {
             )}
             {chatsYesterday.length > 0 && (
               <div>
-                <p className="text-white text-sm font-semibold px-1">
-                  Yesterday
-                </p>
+                <p className="text-white text-sm font-semibold px-1">Yesterday</p>
                 {chatsYesterday?.map((item: ChatData) => (
                   <div
                     key={item.id}
@@ -162,9 +152,7 @@ export const ChatNav = ({ currentUser }: { currentUser: User }) => {
             )}
             {chatsPreviousSevenDays.length > 0 && (
               <div>
-                <p className="text-white text-sm font-semibold px-1">
-                  Previous 7 Days
-                </p>
+                <p className="text-white text-sm font-semibold px-1">Previous 7 Days</p>
                 {chatsPreviousSevenDays?.map((item: ChatData) => (
                   <div
                     data-testid="chats-7days"
@@ -182,9 +170,7 @@ export const ChatNav = ({ currentUser }: { currentUser: User }) => {
             )}
             {olderChats.length > 0 && (
               <div>
-                <p className="text-white text-sm font-semibold px-1">
-                  Rest of the chats
-                </p>
+                <p className="text-white text-sm font-semibold px-1">Rest of the chats</p>
                 {olderChats?.map((item: ChatData) => (
                   <div
                     key={item.id}

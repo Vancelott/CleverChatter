@@ -1,13 +1,16 @@
 "use client";
 
 import GetMessages from "@/app/actions/getMessages";
-import { Suspense, useEffect, useState } from "react";
-import UpdateChat from "@/app/actions/updateChat";
+import { Suspense, useCallback, useEffect, useState } from "react";
+import UpdateMessages from "@/app/actions/updateMessages";
 import { MessagesData, CurrentMessages } from "../../types";
 import GetTotalMessages from "@/app/actions/getTotalMessages";
 import { useInView } from "react-intersection-observer";
 import toast, { Toaster } from "react-hot-toast";
 import Loading from "../loading";
+import { createPrompt } from "@/app/libs/helpers";
+import GetRepo from "@/app/actions/getRepo";
+import GetCurrentChat from "@/app/actions/getCurrentChat";
 
 interface SlugPageProps {
   params: { slug: string; isCreator: boolean };
@@ -40,16 +43,36 @@ export default function Slug({ params }: SlugPageProps) {
   const pageSize = totalMessages / 2 ? 4 : 3;
   const totalPages = Math.ceil(totalMessages! / pageSize);
 
+  const [repoData, setRepoData] = useState<string[]>([]);
+  const [cache, setCache] = useState("");
+
   useEffect(() => {
     GetTotalMessages(chatSlug).then((data) => {
       setTotalMessages(data);
     });
   }, [chatSlug]);
 
+  useEffect(() => {
+    const getRepoAndChat = async () => {
+      const repo = await GetRepo("", chatSlug);
+      const chat = await GetCurrentChat(chatSlug);
+      setCache(chat && chat.cache ? chat.cache : "");
+      setRepoData(repo?.repoData ? repo.repoData : []);
+
+      // if (!repo) {
+      //   // TODO consider implementing a fallback that calls GetRepoContent
+      //   return;
+      // }
+      // setRepoData(repo.repoData);
+    };
+
+    getRepoAndChat();
+  }, [chatSlug]);
+
   // runs once the full response from the ai is available - the last token
   useEffect(() => {
     if (currentOutput.length > 0) {
-      UpdateChat(userInput, currentOutput, chatSlug);
+      UpdateMessages(userInput, currentOutput, chatSlug);
       setCurrentOutput("");
       setUserInput("");
     }
@@ -57,33 +80,42 @@ export default function Slug({ params }: SlugPageProps) {
 
   useEffect(() => {
     if (entryVisibility === true && firstRun) {
-      GetMessages(chatSlug, page).then((data) => {
+      const handleMessages = async () => {
+        console.log("calling 1st getMessages");
+        const messages = await GetMessages(chatSlug, page, pageSize, totalPages);
+        console.log("messages", messages);
+
         setUserMessages((prev: MessagesData[] | undefined) => [
           ...(prev || []),
-          ...data!.UserMessages,
-        ]),
-          setAiMessages((prev: MessagesData[] | undefined) => [
-            ...(prev || []),
-            ...data!.AiMessages,
-          ]);
-      });
-      setPage((prev) => prev + 1);
-      // window.scrollTo({
-      //   top: document.documentElement.scrollHeight,
-      //   behavior: "smooth",
-      // });
-      setFirstRun(false);
+          ...messages!.UserMessages,
+        ]);
+
+        setAiMessages((prev: MessagesData[] | undefined) => [
+          ...(prev || []),
+          ...messages!.AiMessages,
+        ]);
+
+        await setPage((prev) => prev + 1);
+        // window.scrollTo({
+        //   top: document.documentElement.scrollHeight,
+        //   behavior: "smooth",
+        // });
+        await setFirstRun(false);
+        console.log("end of 1st call");
+      };
+      handleMessages();
     }
-  }, [chatSlug, entryVisibility, firstRun, page]);
+  }, [chatSlug, entryVisibility, firstRun, page, pageSize, totalPages]);
 
   useEffect(() => {
-    setTimeout(() => {
+    const timeout = setTimeout(() => {
       if (
         entryVisibility === true &&
         firstRun === false &&
         allMessagesFetched === false
       ) {
-        GetMessages(chatSlug, page).then((data) => {
+        console.log("calling 2nd getMessages");
+        GetMessages(chatSlug, page, pageSize, totalPages).then((data) => {
           if (data) {
             setUserMessages((prev: MessagesData[] | undefined) => [
               ...(prev || []),
@@ -112,36 +144,41 @@ export default function Slug({ params }: SlugPageProps) {
         // });
       }
     }, 1000);
+    return () => {
+      clearTimeout(timeout);
+    };
   }, [
     allMessagesFetched,
     chatSlug,
     entryVisibility,
     firstRun,
     page,
+    pageSize,
     prevPage,
     totalPages,
   ]);
 
-  const handleInputSubmit = async () => {
+  const handleInputSubmit = useCallback(async () => {
     let currentReply = "";
     let err = false;
 
     setLastOutput("");
 
+    const prompt = await createPrompt(messages, userInput, cache, false);
+
     const response = await fetch("/api/ai", {
       method: "POST",
-      body: JSON.stringify(userInput),
+      // body: JSON.stringify({ input: userInput, repo: repoData }),
+      body: JSON.stringify(prompt),
     });
     const reader = response.body?.getReader();
     const decoder = new TextDecoder();
     if (reader) {
       while (true) {
         const { done, value } = await reader.read();
-        console.log("done, value", done, value);
         if (done) break;
         // const decodedData = decoder.decode(value, { stream: true });
         const decodedData = new TextDecoder().decode(value);
-        console.log("decodedData", decodedData);
         const parsedData = JSON.parse(decodedData);
 
         if (parsedData.error) {
@@ -166,7 +203,7 @@ export default function Slug({ params }: SlugPageProps) {
     }));
 
     return currentOutput;
-  };
+  }, [cache, currentOutput, messages, userInput]);
 
   const handleSubmit = async () => {
     if (userInput.length > 0 && submit === false) {
@@ -190,7 +227,7 @@ export default function Slug({ params }: SlugPageProps) {
   return (
     <>
       <Suspense fallback={<Loading />}>
-        <div className="w-full h-screen grow px-20 mx-auto flex flex-col justify-between max-w-5xl my-6">
+        <div className="w-full h-screen mx-auto flex flex-col justify-between max-w-5xl px-8 md:px-24 py-12">
           <div className="flex justify-start flex-col">
             <div ref={myRef}></div>
             <div className="flex flex-col">
@@ -244,13 +281,14 @@ export default function Slug({ params }: SlugPageProps) {
           </div>
           <div>
             {/* <div className="absolute inset-x-0 bottom-0 px-48 py-10 mt-10"> */}
-            <div className="static mb-16 mt-20">
-              <div className="relative flex flex-col">
+            <div className="static mb-22 mt-20">
+              <form className="relative flex flex-col">
                 <button
                   onClick={() => {
                     submit ? null : handleSubmit();
                   }}
                   disabled={submit}
+                  type="submit"
                   className={`absolute right-0 top-[3.9rem] bg-blue-2 text-white py-2 px-4 rounded-full mr-4 mt-2 z-10 ${
                     submit || !isCreator ? "opacity-90 bg-blue-4 cursor-not-allowed" : ""
                   }`}
@@ -273,7 +311,7 @@ export default function Slug({ params }: SlugPageProps) {
                   onChange={(e) => setUserInput(e.target.value)}
                   data-testid="slug-input"
                 />
-              </div>
+              </form>
             </div>
           </div>
         </div>

@@ -165,3 +165,18 @@ export interface User {
 export interface NextAuthUserWithStringId extends NextAuthUser {
   id: string;
 }
+
+type Parts = {
+  text: string;
+};
+
+type Contents = {
+  role: string;
+  parts: Parts[];
+};
+
+export interface IPrompt {
+  config?: { systemInstruction: Contents };
+  contents: Contents[];
+  generationConfig: { maxOutputTokens: number };
+}

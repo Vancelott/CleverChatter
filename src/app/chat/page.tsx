@@ -3,17 +3,23 @@
 import React, { Suspense, useEffect, useRef, useState } from "react";
 import octokit from "../libs/octokit";
 import { RepoList } from "./components/repoList";
-import { Repository, CurrentMessages } from "../types";
+import { Repository, CurrentMessages, IPrompt } from "../types";
 import createChat from "../actions/createChat";
-import UpdateChat from "../actions/updateChat";
+import UpdateMessages from "../actions/updateMessages";
 import { useRouter } from "next/navigation";
 import getCurrentUser from "../actions/getCurrentUser";
 import GetRepoContent from "../actions/getRepoContent";
 import Loading from "./loading";
 import toast, { Toaster } from "react-hot-toast";
+import GetRepo from "../actions/getRepo";
+import CreateRepo from "../actions/createRepo";
+// import { JSONParser } from "@streamparser/json-whatwg";
+import { JSONParser } from "@streamparser/json";
+import UpdateChat from "../actions/updateChat";
+import { createPrompt } from "../libs/helpers";
 
 export default function Chat() {
-  const [data, setData] = useState<Repository[]>([]);
+  const [repos, setRepos] = useState<Repository[]>([]);
 
   const [submit, setSubmit] = useState(false);
   const [username, setUsername] = useState("");
@@ -28,42 +34,66 @@ export default function Chat() {
   const [clickCount, setClickCount] = useState(0);
   const [hideList, setHideList] = useState(false);
   const [chatSlug, setChatSlug] = useState("");
+  const [cache, setCache] = useState("");
   const router = useRouter();
 
   const [selectedChildRepo, setSelectedChildRepo] = useState("");
+  const [repoData, setRepoData] = useState<string[]>([]);
 
   const getSelectedRepo = (name: string) => {
     const data = name;
     setSelectedChildRepo(data);
   };
 
-  // const firstUserPrompt = `At the end of this paragraph is my coding project. Help me prepare for an interview by providing me with example questions which I might get asked about this code specifically. For example: 1. Why did you use "X" library? 2. Why not use useRef instead of useState? etc.`;
-  const firstUserPrompt = `At the end of this paragraph is my coding project. Generate 3-5 questions in bullet points that I might get asked in a coding related job interview.`;
+  const firstUserPrompt = `Generate 3-5 one line questions in bullet points that I might get asked in a coding related job interview. Respond in JSON, and create a "cache" to store 2 to 3 additional short questions about the provided repo, and a short summary of the repo's contents, as well as 1 or 2 code snippets that you find interesting, which you can use to generate more questions in case the initial ones are already exhausted. The response has to be in valid JSON format, with only a response and cache as parents.`;
+
+  // The response must not use the backtick character - U+0060 or 0x60`;
 
   // creates chat once the full output from the ai is available
   useEffect(() => {
     if (clickCount === 0 && currentOutput.length > 1 && selectedChildRepo.length > 1) {
-      createChat(firstUserPrompt, currentOutput, selectedChildRepo).then(
-        (data) => (setChatSlug(data?.slug!), setClickCount((prevCount) => prevCount + 1)),
-      );
+      const create = async () => {
+        let slug;
+        const chat = await createChat(firstUserPrompt, currentOutput, selectedChildRepo);
+        slug = chat?.slug!;
+
+        // TODO call updateRepo instead, to add the slug directly?
+        const repo = await CreateRepo(selectedChildRepo, repoData, slug!);
+
+        setChatSlug(chat?.slug!);
+        setClickCount((prevCount) => prevCount + 1);
+
+        await UpdateChat(slug, cache);
+      };
       setCurrentOutput("");
       setUserInput("");
+      create();
     }
-  }, [currentOutput, clickCount, selectedChildRepo, firstUserPrompt]);
+    return () => {};
+  }, [
+    currentOutput,
+    clickCount,
+    selectedChildRepo,
+    firstUserPrompt,
+    repoData,
+    chatSlug,
+    cache,
+  ]);
 
   useEffect(() => {
     if (chatSlug.length > 1) {
       router.push(`/chat/${[chatSlug]}`, { scroll: false });
     }
   }, [chatSlug, router]);
+  // }, [chatSlug, messages.ai.length, messages.user.length, repoData.length, router]);
 
   useEffect(() => {
     if (currentOutput.length > 0 && clickCount >= 2) {
-      UpdateChat(userInput, currentOutput, chatSlug);
+      UpdateMessages(userInput, currentOutput, chatSlug);
       setCurrentOutput("");
       setUserInput("");
     }
-  }, [chatSlug, clickCount, currentOutput, userInput]);
+  }, [cache, chatSlug, clickCount, currentOutput, userInput]);
 
   useEffect(() => {
     const getUsername = async () => {
@@ -82,7 +112,7 @@ export default function Chat() {
 
         const repoList = await repoGetRequest;
 
-        setData(repoList);
+        setRepos(repoList);
       };
       fetchRepoList();
     }
@@ -90,29 +120,39 @@ export default function Chat() {
 
   const createFirstInput = (decodedContent: string[]) => {
     // return `Answer the following in 200 words or less: ${firstUserPrompt} """${decodedContent}""" `;
-    return `Answer the following in 130 words or less: ${firstUserPrompt}. The questions have to be specific for the code attached after this sentence: """${decodedContent}""" `;
+    return `Answer the following in 200 words or less: ${firstUserPrompt}. The questions have to be specific for the code attached after this sentence: """${decodedContent}""" `;
   };
 
-  const handleInputSubmit = async (initialInput?: string) => {
+  // const handleInputSubmit = async (initialInput?: IPrompt) => {
+  const handleInputSubmit = async (initialInput: string) => {
     let currentReply = "";
+    let currentCache = "";
     let err = false;
+    let isInitial = clickCount == 0;
 
     setLastOutput("");
 
+    const prompt = await createPrompt(messages, initialInput, cache, isInitial);
+
     const response = await fetch("/api/ai", {
       method: "POST",
-      body: JSON.stringify(initialInput ? initialInput : userInput),
+      // body: JSON.stringify(initialInput ? initialInput : userInput),
+      body: JSON.stringify(prompt),
     });
+
     const reader = response.body?.getReader();
     const decoder = new TextDecoder();
+    const jsonParser = new JSONParser({ paths: ["$.response.*"] });
+    const cacheParser = new JSONParser({ paths: ["$.cache.*"] });
+
     if (reader) {
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
+
         // const decodedData = decoder.decode(value, { stream: true });
         const decodedData = new TextDecoder().decode(value);
         const parsedData = JSON.parse(decodedData);
-
         if (parsedData.error) {
           err = true;
           setLastOutput((prev) => (prev += parsedData.error.message));
@@ -120,9 +160,33 @@ export default function Chat() {
           toast.error(currentReply);
           break;
         } else {
-          const text = parsedData.candidates?.[0]?.content?.parts?.[0]?.text!;
-          setLastOutput((prev) => (prev += text));
-          currentReply += text;
+          let text = parsedData.candidates?.[0]?.content?.parts?.[0]?.text!;
+          // TODO maybe use jsonParser.write(JSON.stringify(text)) instead? This might not be necessary if the schema is improved.
+          text = text.replace("```json", "").replace("```", "").replace("`", "");
+
+          jsonParser.onValue = ({ value, key, parent, stack }) => {
+            // TODO the model sometimes responds with the questions in separate objects
+            currentReply += value;
+          };
+
+          cacheParser.onValue = ({ value, key, parent, stack }) => {
+            if (typeof value === "object" && !Array.isArray(value) && value !== null) {
+              currentCache += JSON.stringify(value);
+              return;
+            } else if (Array.isArray(value)) {
+              const objects = value.map((obj) => JSON.stringify(obj));
+              currentCache += objects;
+              return;
+            }
+            currentCache += value;
+          };
+
+          jsonParser.write(text);
+          cacheParser.write(text);
+
+          // setLastOutput((prev) => (prev += currentReply));
+          setLastOutput(() => currentReply);
+          // currentReply = "";
           if (!done) continue;
         }
       }
@@ -133,8 +197,21 @@ export default function Chat() {
       ...prev,
       ai: [...prev.ai, currentReply],
     }));
+    setCache(JSON.stringify(currentCache));
 
     return currentOutput;
+  };
+
+  const handleRepoFetch = async () => {
+    const repo = await GetRepo(selectedChildRepo);
+
+    const repoContent =
+      repo && repo.repoData
+        ? repo.repoData
+        : await GetRepoContent(`${username}`, `${selectedChildRepo}`, "");
+
+    setRepoData(repoContent);
+    return repoContent;
   };
 
   const handleRepoSubmit = async () => {
@@ -147,27 +224,38 @@ export default function Chat() {
           user: [...prev.user, firstUserPrompt],
         }));
 
-        const decodedContent = await GetRepoContent(
-          `${username}`,
-          `${selectedChildRepo}`,
-          "",
-        );
+        const repoContent = repoData.length > 0 ? repoData : await handleRepoFetch();
 
-        const initialInput = await createFirstInput(decodedContent);
+        // const repoContent = await GetRepoContent(
+        //   `${username}`,
+        //   `${selectedChildRepo}`,
+        //   "",
+        // );
 
+        // TODO use createPrompt here?
+        const initialInput = await createFirstInput(repoContent);
+
+        repoData.length <= 0 ? setRepoData(() => repoContent) : null;
         await handleInputSubmit(initialInput);
       } else {
         setMessages((prev) => ({
           ...prev,
           user: [...prev.user, userInput],
         }));
-        await handleInputSubmit();
+        await handleInputSubmit(userInput);
         setClickCount((prevCount) => prevCount + 1);
       }
     } catch (error) {
+      console.error(error);
       setSubmit(false);
       setHideList(false);
       setUserInput("");
+      setMessages((prev) => ({
+        ...prev,
+        user: prev.user.filter((msg) => msg == userInput),
+      }));
+
+      console.error(error);
       toast.error("The repository data could not be fetched. Please try again.");
     } finally {
       setSubmit(false);
@@ -187,10 +275,10 @@ export default function Chat() {
                 <p className="font-semibold text-xl pb-4">
                   Choose a repository to prepare on
                 </p>
-                <RepoList data={data} handleCallback={getSelectedRepo} />
+                <RepoList data={repos} handleCallback={setSelectedChildRepo} />
                 <button
                   onClick={() => (selectedChildRepo ? handleRepoSubmit() : undefined)}
-                  disabled={!selectedChildRepo || userInput.length <= 0}
+                  disabled={!selectedChildRepo}
                   className="mt-10 bg-blue-2 px-3 py-3 rounded-xl text-white-1 font-medium text-xl hover:bg-blue-1 transition-bg-color duration-300 text-gray-200
                     disabled:hover:cursor-not-allowed disabled:bg-blue-1 disabled:opacity-70"
                 >
@@ -228,7 +316,7 @@ export default function Chat() {
                     <div className="relative flex flex-col">
                       <button
                         onClick={() => {
-                          submit ? null : handleInputSubmit();
+                          submit ? null : handleInputSubmit(userInput);
                         }}
                         disabled={submit}
                         className={`absolute right-0 top-[3.9rem] bg-blue-2 text-white py-2 px-4 rounded-full mr-4 mt-2 z-10 ${

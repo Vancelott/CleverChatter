@@ -1,6 +1,6 @@
 "use client";
 
-import React, { Suspense, useEffect, useState } from "react";
+import React, { Suspense, useState } from "react";
 import { ArrowLeftCircleIcon, ArrowRightCircleIcon } from "@heroicons/react/24/solid";
 import { Repository } from "@/app/types";
 import Loading from "../loading";
@@ -13,7 +13,6 @@ export const RepoList = ({
   handleCallback: (selectedRepo: string) => void;
 }) => {
   const [selectedRepo, setSelectedRepo] = useState("");
-
   const totalRepos = data.length;
   const [page, setPage] = useState(1);
   const repoPerPage = 6;

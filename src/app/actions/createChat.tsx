@@ -51,6 +51,7 @@ const CreateChat = async (userInput: string, aiOutput: string, repo: string) => 
         slug: generatedSlug,
         title: title,
         repository: repo,
+        cache: "",
         user: {
           connect: { id: currentUser!.id },
         },

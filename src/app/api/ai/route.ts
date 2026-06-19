@@ -3,25 +3,11 @@ import type { NextRequest } from "next/server";
 
 const SendPrompt = async (request: NextRequest) => {
   const req = await request.json();
+  console.log("req", req);
 
-  // TODO make sure the request doesn't use too many tokens, if it does - split the call into two separate calls? - https://ai.google.dev/api/tokens#v1beta.models.countTokens
+  const prompt = req;
 
-  const prompt = {
-    contents: [
-      {
-        parts: [
-          {
-            text: req,
-          },
-        ],
-      },
-    ],
-    generationConfig: {
-      maxOutputTokens: 2000,
-    },
-  };
-
-  // TODO move this call in a separate server action, and just call it here (or just use usage_metadata attribute from the response)
+  // TODO (not sure if it will be useful) move this call in a separate server action, and just call it here (or just use usage_metadata attribute from the response)
   // const countTokensResponse = await ai.models.countTokens({
   //   model: "gemini-2.0-flash",
   //   contents: req,
@@ -42,10 +28,11 @@ const SendPrompt = async (request: NextRequest) => {
           "Content-Type": "application/json",
           // "Content-Type": "text/event-stream",
         },
-        body: JSON.stringify(prompt),
+        body: prompt,
         method: "POST",
       },
     );
+    console.log("response", response);
 
     if (!response) {
       console.error("No response returned from the AI api route.");

@@ -89,12 +89,13 @@ model Chat {
     updatedAt DateTime  @updatedAt
     published Boolean   @default(false)
     title     String
+    cache     String
     repository String
     userId    String   @db.ObjectId
     messages  Conversation[] 
 
     user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-    Comment   Comment[]
+   Comment   Comment[]
 
     @@unique([userId, id])
     @@map("chats")
@@ -124,4 +125,15 @@ model AiMessages {
   messageContent String
   createdAt DateTime  @default(now())
   conversation   Conversation   @relation(fields: [messageId], references: [id])
+}
+
+model Repository {
+  id        String @id @default(auto()) @map("_id") @db.ObjectId
+  title     String 
+  userId    String @db.ObjectId    
+  repoData  String[]
+  updatedAt DateTime  @default(now())
+  chats     String[]
+
+//   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

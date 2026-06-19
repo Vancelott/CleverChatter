@@ -53,7 +53,7 @@ const GetTotalMessages = async (chatSlug: string) => {
 
   // return { totalMessages, pageSize, totalPages };
 
-  console.log(totalMessages);
+  await prisma.$disconnect();
 
   return totalMessages;
 };

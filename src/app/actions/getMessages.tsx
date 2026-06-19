@@ -4,7 +4,12 @@ import { useSession } from "next-auth/react";
 import { prisma } from "../libs/prismadb";
 import GetTotalMessages from "./getTotalMessages";
 
-const GetMessages = async (chatSlug: string, page: number) => {
+const GetMessages = async (
+  chatSlug: string,
+  page: number,
+  pageSize: number,
+  totalPages: number,
+) => {
   const conversationIdObject = await prisma.conversation.findFirst({
     where: {
       slug: chatSlug,
@@ -34,11 +39,10 @@ const GetMessages = async (chatSlug: string, page: number) => {
 
   const currentPage = page;
 
-  const totalMessages = userMessagesCount + aiMessagesCount;
-  const pageSize = totalMessages / 2 ? 4 : 3 && totalMessages === 2 ? 1 : 1;
-  const totalPages = Math.ceil(totalMessages / pageSize);
-
-  console.log("totalMessages:", totalMessages);
+  // const totalMessages = userMessagesCount + aiMessagesCount;
+  // // const pageSize = totalMessages / 2 ? 4 : 3 && totalMessages === 2 ? 1 : 1;
+  // const pageSize = totalMessages === 2 ? 1 : totalMessages / 2 ? 4 : 3;
+  // const totalPages = Math.ceil(totalMessages / pageSize);
 
   if (!page) {
     console.log("Page is missing in getMessages");
@@ -79,8 +83,8 @@ const GetMessages = async (chatSlug: string, page: number) => {
 
     // console.log("userMessagesCount:", userMessagesCount);
     // console.log("aimessage:", aiMessagesCount);
-    console.log("currentPage:", currentPage);
-    console.log("totalPages:", totalPages);
+    await prisma.$disconnect();
+
     return messages;
   } else {
     console.log("All of the currently available messages have been fetched.");

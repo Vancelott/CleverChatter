@@ -3,7 +3,6 @@ import type { NextRequest } from "next/server";
 
 const SendPrompt = async (request: NextRequest) => {
   const req = await request.json();
-  console.log("req", req);
 
   const prompt = req;
 
@@ -21,7 +20,7 @@ const SendPrompt = async (request: NextRequest) => {
 
   try {
     const response = await fetch(
-      "https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:streamGenerateContent?alt=sse",
+      "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:streamGenerateContent?alt=sse",
       {
         headers: {
           "x-goog-api-key": process.env.GEMINI_API_KEY!,
@@ -32,7 +31,6 @@ const SendPrompt = async (request: NextRequest) => {
         method: "POST",
       },
     );
-    console.log("response", response);
 
     if (!response) {
       console.error("No response returned from the AI api route.");

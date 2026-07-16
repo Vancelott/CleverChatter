@@ -14,39 +14,52 @@ const initialPrompt = (prompt: string) => {
       },
     ],
     generationConfig: {
-      responseJsonSchema: {
-        text: {
-          mimeType: "application/json",
-          schema: {
+      responseMimeType: "application/json",
+      responseSchema: {
+        type: "OBJECT",
+        properties: {
+          response: {
+            type: "ARRAY",
+            items: { type: "STRING" },
+            minItems: 3,
+            maxItems: 5,
+          },
+          cache: {
+            type: "OBJECT",
             properties: {
-              response: {
-                description:
-                  "This is the response to the last user message from the chat history",
+              questions: {
+                type: "ARRAY",
+                items: { type: "STRING" },
+                minItems: 2,
+                maxItems: 3,
               },
-              cache: {
-                descirption:
-                  "Create a cache field to store 2 or 3 additional questions about the provided repo, and also store a short summary of the repo's contents, as well as 1 or 2 code snippets that you find interesting, which you can use to generate more questions in case the initial ones are already exhausted. The additional questions, summary and snippets should all be under `cache`",
+              summary: { type: "STRING" },
+              snippets: {
+                type: "ARRAY",
+                items: { type: "STRING" },
+                minItems: 1,
+                maxItems: 2,
               },
             },
-            required: ["response", "cache"],
+            required: ["questions", "summary", "snippets"],
           },
         },
+        required: ["response", "cache"],
       },
       maxOutputTokens: 30000,
     },
   });
 };
-// role: "user",
 
-const config = {
-  systemInstruction: {
+const createSystemInstructions = (cache: string) => {
+  return {
     role: "user",
     parts: [
       {
-        text: "You are an expert developer interviewer and your job is to ask interview questions based on provided code from a specific github repository. If the repository content is no longer available within the chat history, there will be a short summary with a few backup questions that you can provide to the user in case you get prompted for additional questions. The chat has to be about the user preparing for an interview for that same project, and you have to keep the conversation going in regards to it.",
+        text: `You are an expert developer interviewer and your job is to ask interview questions based on provided code from a specific repository. Here is the cached summary of the project, as well as code snippets and additional questions: ${cache}. Use all of them to ask additional questions, in plain text, if requested to do so. The chat has to be about the user preparing for an interview for that same project, and you have to keep the conversation going in regards to it.`,
       },
     ],
-  },
+  };
 };
 
 const newMessage = (msg: string, role: MessageRole) => {
@@ -60,7 +73,6 @@ const newMessage = (msg: string, role: MessageRole) => {
   };
 };
 
-// TODO import the old/fetched messages (the schema will have to be updated to differentiate the user and model messages)
 export const createPrompt = async (
   messages: CurrentMessages,
   currentPrompt: string,
@@ -72,7 +84,7 @@ export const createPrompt = async (
   }
 
   let prompt: IPrompt = {
-    // config: config,
+    systemInstruction: createSystemInstructions(cache),
     contents: [],
     generationConfig: {
       maxOutputTokens: 2000,
@@ -86,7 +98,6 @@ export const createPrompt = async (
       prompt.contents.push(newMessage(messages.ai[i], "model"));
     }
   }
-  prompt.contents.push(newMessage(cache, "model"));
   prompt.contents.push(newMessage(currentPrompt, "user"));
 
   return JSON.stringify(prompt);

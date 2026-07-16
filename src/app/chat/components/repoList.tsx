@@ -13,12 +13,12 @@ export const RepoList = ({
   handleCallback: (selectedRepo: string) => void;
 }) => {
   const [selectedRepo, setSelectedRepo] = useState("");
-  const totalRepos = data.length;
   const [page, setPage] = useState(1);
+
   const repoPerPage = 6;
   const start = (Number(page) - 1) * Number(repoPerPage);
   const end = start + Number(repoPerPage);
-
+  const totalRepos = data.length;
   const lastPage = totalRepos / repoPerPage;
   const paginatedRepos = data.slice(start, end);
 

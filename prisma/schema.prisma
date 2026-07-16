@@ -66,7 +66,7 @@ model User {
     id             String    @id @default(auto()) @map("_id") @db.ObjectId
     email          String?    @unique
     emailVerified  DateTime? @map("email_verified")
-    username       String?    @unique
+    username       String?    @unique // TODO shouldn't it be required?
     name           String?
     hashedPassword String?
     chats          Chat[]

@@ -1,321 +1,65 @@
-"use client";
+import { redirect } from "next/navigation";
 
-import GetMessages from "@/app/actions/getMessages";
-import { Suspense, useCallback, useEffect, useState } from "react";
-import UpdateMessages from "@/app/actions/updateMessages";
-import { MessagesData, CurrentMessages } from "../../types";
-import GetTotalMessages from "@/app/actions/getTotalMessages";
-import { useInView } from "react-intersection-observer";
-import toast, { Toaster } from "react-hot-toast";
-import Loading from "../loading";
-import { createPrompt } from "@/app/libs/helpers";
 import GetRepo from "@/app/actions/getRepo";
 import GetCurrentChat from "@/app/actions/getCurrentChat";
+import getCurrentUser from "@/app/actions/getCurrentUser";
+import octokit from "@/app/libs/octokit";
+import ChatComp from "../components/chatComp";
+import GetMessages from "@/app/actions/getMessages";
+import GetTotalMessages from "@/app/actions/getTotalMessages";
 
-interface SlugPageProps {
-  params: { slug: string; isCreator: boolean };
-}
+export default async function Slug({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
 
-export default function Slug({ params }: SlugPageProps) {
-  const { ref: myRef, inView: entryVisibility, entry } = useInView();
+  const user = await getCurrentUser();
+  const chat = await GetCurrentChat(slug);
+  if (user == null) {
+    redirect("/");
+  }
 
-  const [chatSlug] = useState(params.slug);
-  const [userMessages, setUserMessages] = useState<MessagesData[]>();
-  const [aiMessages, setAiMessages] = useState<MessagesData[]>();
+  if (chat == null) {
+    // TODO redirect to error.ts
+    redirect("/");
+  }
 
-  const [userInput, setUserInput] = useState("");
-  const [currentOutput, setCurrentOutput] = useState("");
-  const [lastOutput, setLastOutput] = useState("");
-  const [submit, setSubmit] = useState(false);
-  const [isCreator, setIsCreator] = useState(params.isCreator);
+  const username = user.username!;
+  const totalMessages = await GetTotalMessages(slug);
 
-  const [messages, setMessages] = useState<CurrentMessages>({
-    ai: [],
-    user: [],
+  const pageSize = totalMessages > 0 ? (totalMessages % 2 === 0 ? 4 : 3) : 0;
+  const totalPages = totalMessages > 0 ? Math.ceil(totalMessages / pageSize) : 0;
+  const page = 1;
+
+  const { data } = await octokit.rest.repos.listForUser({
+    username,
   });
-  const [page, setPage] = useState(1);
-  const [prevPage, setPrevPage] = useState(1);
-  const [totalMessages, setTotalMessages] = useState(0);
 
-  const [firstRun, setFirstRun] = useState(true);
-  const [allMessagesFetched, setAllMessagesFetched] = useState(false);
+  const repo = await GetRepo("", slug);
+  const cache = chat && chat.cache ? chat.cache : "";
+  const repoData = repo?.repoData ? repo.repoData : [];
 
-  const pageSize = totalMessages / 2 ? 4 : 3;
-  const totalPages = Math.ceil(totalMessages! / pageSize);
+  const initialMessages = await GetMessages(slug, page, pageSize, totalPages);
 
-  const [repoData, setRepoData] = useState<string[]>([]);
-  const [cache, setCache] = useState("");
+  let msgs;
 
-  useEffect(() => {
-    GetTotalMessages(chatSlug).then((data) => {
-      setTotalMessages(data);
-    });
-  }, [chatSlug]);
+  let aiMessages = initialMessages?.AiMessages?.map((msg) => msg.messageContent) ?? [];
+  let userMessages =
+    initialMessages?.UserMessages?.map((msg) => msg.messageContent) ?? [];
 
-  useEffect(() => {
-    const getRepoAndChat = async () => {
-      const repo = await GetRepo("", chatSlug);
-      const chat = await GetCurrentChat(chatSlug);
-      setCache(chat && chat.cache ? chat.cache : "");
-      setRepoData(repo?.repoData ? repo.repoData : []);
-
-      // if (!repo) {
-      //   // TODO consider implementing a fallback that calls GetRepoContent
-      //   return;
-      // }
-      // setRepoData(repo.repoData);
-    };
-
-    getRepoAndChat();
-  }, [chatSlug]);
-
-  // runs once the full response from the ai is available - the last token
-  useEffect(() => {
-    if (currentOutput.length > 0) {
-      UpdateMessages(userInput, currentOutput, chatSlug);
-      setCurrentOutput("");
-      setUserInput("");
-    }
-  }, [chatSlug, currentOutput, userInput]);
-
-  useEffect(() => {
-    if (entryVisibility === true && firstRun) {
-      const handleMessages = async () => {
-        console.log("calling 1st getMessages");
-        const messages = await GetMessages(chatSlug, page, pageSize, totalPages);
-        console.log("messages", messages);
-
-        setUserMessages((prev: MessagesData[] | undefined) => [
-          ...(prev || []),
-          ...messages!.UserMessages,
-        ]);
-
-        setAiMessages((prev: MessagesData[] | undefined) => [
-          ...(prev || []),
-          ...messages!.AiMessages,
-        ]);
-
-        await setPage((prev) => prev + 1);
-        // window.scrollTo({
-        //   top: document.documentElement.scrollHeight,
-        //   behavior: "smooth",
-        // });
-        await setFirstRun(false);
-        console.log("end of 1st call");
-      };
-      handleMessages();
-    }
-  }, [chatSlug, entryVisibility, firstRun, page, pageSize, totalPages]);
-
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      if (
-        entryVisibility === true &&
-        firstRun === false &&
-        allMessagesFetched === false
-      ) {
-        console.log("calling 2nd getMessages");
-        GetMessages(chatSlug, page, pageSize, totalPages).then((data) => {
-          if (data) {
-            setUserMessages((prev: MessagesData[] | undefined) => [
-              ...(prev || []),
-              ...data!.UserMessages,
-            ]),
-              setAiMessages((prev: MessagesData[] | undefined) => [
-                ...(prev || []),
-                ...data!.AiMessages,
-              ]);
-            window.scrollBy(0, 700);
-          } else {
-            setAllMessagesFetched(true);
-          }
-        });
-        // TODO get rid of the prevpage state?
-        if (prevPage + 1 !== totalPages) {
-          setPage((prev) => {
-            setPrevPage(prev);
-            return prev + 1;
-          });
-        }
-        // window.scrollTo({
-        //   // top: document.documentElement.scrollHeight,
-        //   top: window.innerHeight,
-        //   behavior: "smooth",
-        // });
-      }
-    }, 1000);
-    return () => {
-      clearTimeout(timeout);
-    };
-  }, [
-    allMessagesFetched,
-    chatSlug,
-    entryVisibility,
-    firstRun,
-    page,
-    pageSize,
-    prevPage,
-    totalPages,
-  ]);
-
-  const handleInputSubmit = useCallback(async () => {
-    let currentReply = "";
-    let err = false;
-
-    setLastOutput("");
-
-    const prompt = await createPrompt(messages, userInput, cache, false);
-
-    const response = await fetch("/api/ai", {
-      method: "POST",
-      // body: JSON.stringify({ input: userInput, repo: repoData }),
-      body: JSON.stringify(prompt),
-    });
-    const reader = response.body?.getReader();
-    const decoder = new TextDecoder();
-    if (reader) {
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        // const decodedData = decoder.decode(value, { stream: true });
-        const decodedData = new TextDecoder().decode(value);
-        const parsedData = JSON.parse(decodedData);
-
-        if (parsedData.error) {
-          err = true;
-          setLastOutput((prev) => (prev += parsedData.error.message));
-          currentReply += parsedData.error.message;
-          toast.error(currentReply);
-          break;
-        } else {
-          const text = parsedData.candidates?.[0]?.content?.parts?.[0]?.text!;
-          setLastOutput((prev) => (prev += text));
-          currentReply += text;
-          if (!done) continue;
-        }
-      }
-    }
-
-    if (!err) setCurrentOutput(currentReply);
-    setMessages((prev) => ({
-      ...prev,
-      ai: [...prev.ai, currentReply],
-    }));
-
-    return currentOutput;
-  }, [cache, currentOutput, messages, userInput]);
-
-  const handleSubmit = async () => {
-    if (userInput.length > 0 && submit === false) {
-      setSubmit(true);
-      setMessages((prev) => ({
-        ...prev,
-        user: [...prev.user, userInput],
-      }));
-      try {
-        await handleInputSubmit();
-      } catch (error) {
-        console.log("Error during submit:", error);
-      } finally {
-        setSubmit(false);
-      }
-    } else {
-      toast.error("Please type in a message.");
-    }
-  };
+  msgs = { ai: aiMessages, user: userMessages };
 
   return (
-    <>
-      <Suspense fallback={<Loading />}>
-        <div className="w-full h-screen mx-auto flex flex-col justify-between max-w-5xl px-8 md:px-24 py-12">
-          <div className="flex justify-start flex-col">
-            <div ref={myRef}></div>
-            <div className="flex flex-col">
-              <div className="flex flex-col-reverse">
-                <Suspense fallback={<Loading />}>
-                  {!userMessages && (
-                    <div className="mt-32">
-                      <Loading />
-                    </div>
-                  )}
-                  {userMessages?.map(
-                    (userMessage: MessagesData, index = +userMessage.id) => (
-                      <div key={index}>
-                        <p className="px-4 py-6 bg-blue-0 text-white rounded-3xl my-6">
-                          {userMessage.messageContent}
-                        </p>
-                        <p className="px-4 py-6 bg-blue-1 text-white rounded-3xl">
-                          <Suspense
-                            fallback={<p className="font-bold text-white">....</p>}
-                          >
-                            {aiMessages &&
-                              aiMessages[index] &&
-                              aiMessages[index].messageContent}
-                          </Suspense>
-                        </p>
-                      </div>
-                    ),
-                  )}
-                </Suspense>
-              </div>
-              {/* {userMessages!?.length > 0 && */}
-              <div className="flex flex-col">
-                {messages.user?.map((userMessage: string, index) => (
-                  <div key={index}>
-                    <p className="px-4 py-6 bg-blue-0 text-white rounded-3xl my-6">
-                      {userMessage}
-                    </p>
-                    <div className="px-4 py-6 bg-blue-1 text-white rounded-3xl">
-                      {messages.ai[index] ? (
-                        messages.ai[index]
-                      ) : lastOutput.length > 0 ? (
-                        lastOutput
-                      ) : (
-                        <Loading />
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-          <div>
-            {/* <div className="absolute inset-x-0 bottom-0 px-48 py-10 mt-10"> */}
-            <div className="static mb-22 mt-20">
-              <form className="relative flex flex-col">
-                <button
-                  onClick={() => {
-                    submit ? null : handleSubmit();
-                  }}
-                  disabled={submit}
-                  type="submit"
-                  className={`absolute right-0 top-[3.9rem] bg-blue-2 text-white py-2 px-4 rounded-full mr-4 mt-2 z-10 ${
-                    submit || !isCreator ? "opacity-90 bg-blue-4 cursor-not-allowed" : ""
-                  }`}
-                >
-                  Submit
-                </button>
-                <textarea
-                  rows={4}
-                  name="comment"
-                  id="comment"
-                  value={userInput}
-                  disabled={submit || !isCreator}
-                  placeholder="Send a message"
-                  // add scrollbar-gutter property once available
-                  className={`w-full p-2 shadow-sm focus:ring-blue-3 pr-24 z-15 resize-none focus:border-blue-3 block text-black sm:text-sm bg-gray-100 border-gray-300 rounded-md mt-10 overflow-visible ${
-                    submit || !isCreator
-                      ? "bg-slate-200 opacity-80 cursor-not-allowed"
-                      : ""
-                  }`}
-                  onChange={(e) => setUserInput(e.target.value)}
-                  data-testid="slug-input"
-                />
-              </form>
-            </div>
-          </div>
-        </div>
-      </Suspense>
-    </>
+    <ChatComp
+      username={username}
+      repos={data}
+      slug={slug}
+      cache={cache}
+      repoData={repoData}
+      initialMessages={msgs}
+      pageData={{
+        totalMessages: totalMessages,
+        pageSize: pageSize,
+        totalPages: totalPages,
+      }}
+    />
   );
 }

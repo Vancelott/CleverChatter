@@ -176,7 +176,7 @@ type Contents = {
 };
 
 export interface IPrompt {
-  config?: { systemInstruction: Contents };
+  systemInstruction?: Contents;
   contents: Contents[];
   generationConfig: { maxOutputTokens: number };
 }

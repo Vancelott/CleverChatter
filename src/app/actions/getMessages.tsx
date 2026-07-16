@@ -10,47 +10,9 @@ const GetMessages = async (
   pageSize: number,
   totalPages: number,
 ) => {
-  const conversationIdObject = await prisma.conversation.findFirst({
-    where: {
-      slug: chatSlug,
-    },
-    select: {
-      id: true,
-    },
-  });
+  const skipValue = (page - 1) * pageSize + (page === 1 ? 0 : 0);
 
-  const conversationId = conversationIdObject!.id;
-
-  const userMessagesCount = await prisma.userMessages.count({
-    where: {
-      messageId: {
-        equals: conversationId,
-      },
-    },
-  });
-
-  const aiMessagesCount = await prisma.aiMessages.count({
-    where: {
-      messageId: {
-        equals: conversationId,
-      },
-    },
-  });
-
-  const currentPage = page;
-
-  // const totalMessages = userMessagesCount + aiMessagesCount;
-  // // const pageSize = totalMessages / 2 ? 4 : 3 && totalMessages === 2 ? 1 : 1;
-  // const pageSize = totalMessages === 2 ? 1 : totalMessages / 2 ? 4 : 3;
-  // const totalPages = Math.ceil(totalMessages / pageSize);
-
-  if (!page) {
-    console.log("Page is missing in getMessages");
-  }
-
-  const skipValue = (currentPage - 1) * pageSize + (currentPage === 1 ? 0 : 0);
-
-  if (currentPage <= totalPages) {
+  if (page <= totalPages) {
     const messages = await prisma.conversation.findFirst({
       where: {
         slug: chatSlug,
@@ -66,6 +28,9 @@ const GetMessages = async (
           orderBy: {
             id: "desc",
           },
+          select: {
+            messageContent: true,
+          },
         },
         AiMessages: {
           skip: skipValue,
@@ -76,13 +41,13 @@ const GetMessages = async (
           orderBy: {
             id: "desc",
           },
+          select: {
+            messageContent: true,
+          },
         },
       },
       // take: pageSize,
     });
-
-    // console.log("userMessagesCount:", userMessagesCount);
-    // console.log("aimessage:", aiMessagesCount);
     await prisma.$disconnect();
 
     return messages;

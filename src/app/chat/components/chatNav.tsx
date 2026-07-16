@@ -84,7 +84,7 @@ export const ChatNav = ({ currentUser }: { currentUser: User }) => {
   };
 
   return (
-    <div className={`${hidden ? "pr-0" : "sm:pr-[288px] mr-12"} relative`}>
+    <div className={`${hidden ? "pr-0" : "sm:pr-[288px]"} relative`}>
       <button
         onClick={() => setHidden(!hidden)}
         className={`px-2 py-1 h-10 w-10 m-3 shadow-md shadow-gray-800 fixed cursor-pointer rounded-full bg-blue-2 ${

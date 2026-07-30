@@ -17,6 +17,7 @@ const GetCurrentChat = async (currentSlug: string) => {
 
     return currentChat;
   } catch (error: any) {
+    console.log("Error in GetCurrentChat", error);
     return null;
   }
 };

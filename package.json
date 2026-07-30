@@ -19,6 +19,7 @@
     "@octokit/rest": "^20.0.2",
     "@octokit/types": "^16.0.0",
     "@streamparser/json": "^0.0.22",
+    "@tailwindcss/postcss": "^4.3.3",
     "@xenova/transformers": "^2.7.0",
     "ai": "^2.2.18",
     "axios": "^1.5.1",
@@ -52,7 +53,7 @@
     "eslint": "latest",
     "eslint-config-next": "^14.0.3",
     "postcss": "latest",
-    "tailwindcss": "latest",
+    "tailwindcss": "^4.3.3",
     "typescript": "latest"
   },
   "browser": {

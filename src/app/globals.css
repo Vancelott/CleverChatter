@@ -1,12 +1,41 @@
-@import "tailwindcss/base";
-@import "tailwindcss/components";
-@import "tailwindcss/utilities";
+@import "tailwindcss";
+
+@theme {
+  /* Colors */
+  --color-blue-00: #081821;
+  --color-blue-0: #16425b;
+  --color-blue-1: #2f6690;
+  --color-blue-2: #3a7ca5;
+  --color-blue-3: #81c3d7;
+  --color-blue-4: #64b5ce;
+  --color-blue-5: #a3d3e1;
+  --color-white-0: #d9dcd6;
+
+  /* TODO not in use? */
+
+  /* --background-image-gradient-radial: radial-gradient(var(--tw-gradient-stops));
+  --background-image-gradient-conic: conic-gradient(
+    from 180deg at 50% 50%,
+    var(--tw-gradient-stops)
+  ); */
+
+  /* used in messagesLanding.tsx */
+  --background-image-diagonal-strips: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%2316425b' fill-opacity='0.25' fill-rule='evenodd'%3E%3Cpath d='M0 40L40 0H20L0 20M40 40V20L20 40'/%3E%3C/g%3E%3C/svg%3E");
+
+  --font-montserrat: "Montserrat", sans-serif;
+}
 
 /* width */
 ::-webkit-scrollbar {
   width: 10px;
 }
 
+@layer base {
+  input,
+  textarea {
+    background-color: #fff;
+  }
+}
 /* Track */
 ::-webkit-scrollbar-track {
   background: #3d3d3d;

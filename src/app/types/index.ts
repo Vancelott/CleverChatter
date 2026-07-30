@@ -149,6 +149,11 @@ export interface ChatData {
   userId: string;
 }
 
+export interface ISortedChats {
+  label: "Today" | "Yesterday" | "Past week" | "Older";
+  chats: ChatData[];
+}
+
 export interface User {
   id: string;
   email: string | null;

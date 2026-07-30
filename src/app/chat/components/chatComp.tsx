@@ -23,6 +23,7 @@ const firstUserPrompt = `Generate 3-5 one line questions in bullet points that I
 const displayedFirstPrompt =
   "Hello! Please provide me with a few questions for my project that I've selected, in order to prepare for an upcoming job interview.";
 
+// TODO rename and move the interface
 interface IProps {
   username: string;
   repos: Repository[];
@@ -361,7 +362,7 @@ export const ChatComp = (props: IProps) => {
                           submit ? null : handleSubmit();
                         }}
                         disabled={submit}
-                        className={`absolute right-0 top-[3.9rem] bg-blue-2 text-white py-2 px-4 rounded-full mr-4 mt-2 z-10 ${
+                        className={`absolute right-0 top-[3.9rem] bg-blue-1 hover:bg-blue-2 text-white py-2 px-4 rounded-full mr-4 mt-2 z-10 hover:cursor-pointer ${
                           submit ? "opacity-90 bg-blue-4 cursor-not-allowed" : ""
                         }`}
                       >
@@ -374,7 +375,7 @@ export const ChatComp = (props: IProps) => {
                         value={prompt.input}
                         disabled={submit}
                         placeholder="Send a message"
-                        className="w-full p-2 shadow-sm focus:ring-blue-3 pr-24 z-15 resize-none focus:border-blue-3 block text-black sm:text-sm border-gray-300 rounded-md mt-10 overflow-visible disabled:bg-slate-200 disabled:opacity-80 disabled:hover:cursor-not-allowed"
+                        className="w-full p-2 shadow-sm focus:ring-blue-3 pr-24 z-5 resize-none focus:border-blue-3 block text-black sm:text-sm border-gray-300 rounded-md mt-10 overflow-visible disabled:bg-slate-200 disabled:opacity-80 disabled:hover:cursor-not-allowed"
                         onChange={(e) =>
                           setPrompt((prev) => ({ ...prev, input: e.target.value }))
                         }

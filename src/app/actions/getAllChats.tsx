@@ -9,7 +9,6 @@ const GetAllChats = async () => {
 
     if (!currentUser) {
       console.log("No currentUser found in GetAllChats.");
-      await prisma.$disconnect();
 
       return null;
     }
@@ -20,12 +19,9 @@ const GetAllChats = async () => {
       },
     });
 
-    await prisma.$disconnect();
-    // return null;
     return allChats;
   } catch (error: any) {
     console.log("Error in GetAllChats", error);
-    await prisma.$disconnect();
 
     return null;
   }

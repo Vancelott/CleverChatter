@@ -48,7 +48,6 @@ const GetMessages = async (
       },
       // take: pageSize,
     });
-    await prisma.$disconnect();
 
     return messages;
   } else {

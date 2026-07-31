@@ -5,8 +5,7 @@ import { PrismaClient } from "@prisma/client";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import { NextAuthUserWithStringId } from "./src/app/types";
 import { inDevEnvironment } from "./src/app/libs/inDevEnvironment";
-
-const prisma = new PrismaClient();
+import { prisma } from "@/app/libs/prismadb";
 
 export const authOptions: AuthOptions = {
   adapter: PrismaAdapter(prisma),

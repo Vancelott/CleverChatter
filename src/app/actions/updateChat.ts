@@ -3,8 +3,6 @@
 import { prisma } from "../libs/prismadb";
 
 const UpdateChat = async (slug: string, cache: string) => {
-  console.log("updateChat called");
-
   try {
     if (!slug) {
       console.error("Missing slug in UpdateChat.");

@@ -12,6 +12,7 @@ import { ChatBubbleLeftRightIcon } from "@heroicons/react/24/outline";
 import { ChatData, User, ISortedChats } from "@/app/types";
 import { isBefore, isToday, subDays } from "date-fns";
 import toast from "react-hot-toast";
+import { redirect, RedirectType } from "next/navigation";
 
 export const ChatNav = ({
   currentUser,
@@ -57,6 +58,7 @@ export const ChatNav = ({
         sortedArr.find((group) => group.label == "Older")?.chats.push(chat);
       }
     });
+
     setSortedChats(sortedArr);
   }, [allChats]);
 
@@ -74,7 +76,7 @@ export const ChatNav = ({
 
   const handleNewChat = () => {
     if (currentUser) {
-      router.push(`/chat`, { scroll: false });
+      router.replace("/chat", { scroll: false });
     } else {
       toast.error("Please sign in to create a new chat.");
     }

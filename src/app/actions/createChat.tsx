@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { prisma } from "../libs/prismadb";
 import getCurrentUser from "./getCurrentUser";
 import getSession from "./getSession";
@@ -76,6 +77,8 @@ const CreateChat = async (userInput: string, aiOutput: string, repo: string) => 
         },
       },
     });
+
+    revalidatePath("/chat");
 
     return newChat;
   } catch (error: any) {

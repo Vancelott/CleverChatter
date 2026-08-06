@@ -138,6 +138,16 @@ export interface CurrentMessages {
   user: string[];
 }
 
+export interface IChatComp {
+  username: string;
+  repos: Repository[];
+  slug?: string;
+  cache?: string;
+  repoData?: string[];
+  initialMessages?: CurrentMessages;
+  pageData?: { totalMessages: number; pageSize: number; totalPages: number };
+}
+
 export interface ChatData {
   id: string;
   slug: string;

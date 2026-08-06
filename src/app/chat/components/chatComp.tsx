@@ -3,7 +3,7 @@
 import React, { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { useInView } from "react-intersection-observer";
 import { RepoList } from "../components/repoList";
-import { Repository, CurrentMessages } from "../../types";
+import { Repository, CurrentMessages, IChatComp } from "../../types";
 import createChat from "../../actions/createChat";
 import UpdateMessages from "../../actions/updateMessages";
 import { useRouter } from "next/navigation";
@@ -23,20 +23,9 @@ const firstUserPrompt = `Generate 3-5 one line questions in bullet points that I
 const displayedFirstPrompt =
   "Hello! Please provide me with a few questions for my project that I've selected, in order to prepare for an upcoming job interview.";
 
-// TODO rename and move the interface
-interface IProps {
-  username: string;
-  repos: Repository[];
-  slug?: string;
-  cache?: string;
-  repoData?: string[];
-  initialMessages?: CurrentMessages;
-  pageData?: { totalMessages: number; pageSize: number; totalPages: number };
-}
-
-export const ChatComp = (props: IProps) => {
+export const ChatComp = (props: IChatComp) => {
   const { username, repos, initialMessages, pageData } = props;
-  const { ref: myRef, inView: entryVisibility, entry } = useInView();
+  const { ref: myRef, inView: entryVisibility, entry } = useInView(); // used to fetch messages once the top message is visible
 
   const [submit, setSubmit] = useState(false);
   const [prompt, setPrompt] = useState({
@@ -138,9 +127,10 @@ export const ChatComp = (props: IProps) => {
 
   useEffect(() => {
     if (chatSlug.length > 1) {
-      window.history.pushState(null, "", `/chat/${chatSlug}`);
+      // window.history.pushState(null, "", `/chat/${chatSlug}`);
+      router.replace(`/chat/${chatSlug}`, { scroll: false });
     }
-  }, [chatSlug]);
+  }, [chatSlug, router]);
 
   useEffect(() => {
     if (chatSlug && prompt.output.length > 0) {
@@ -220,11 +210,14 @@ export const ChatComp = (props: IProps) => {
 
             jsonParser.write(text);
             cacheParser.write(text);
+          } else {
+            // no special parsing is needed
+            currentReply += text;
           }
 
           setPrompt((prev) => ({
             ...prev,
-            streamedOutput: isInitial ? currentReply : prev.streamedOutput + text,
+            streamedOutput: currentReply,
           }));
           if (!done) continue;
         }
@@ -236,7 +229,8 @@ export const ChatComp = (props: IProps) => {
     }
 
     if (!err) {
-      setPrompt((prev) => ({ ...prev, output: currentReply }));
+      setPrompt((prev) => ({ ...prev, output: currentReply, input: "" }));
+      // setPrompt((prev) => ({ ...prev, output: currentReply }));
       setMessages((prev) => ({
         ...prev,
         ai: [...prev.ai, currentReply],
@@ -291,9 +285,10 @@ export const ChatComp = (props: IProps) => {
       setSubmit(false);
       setHideList(false);
       setPrompt((prev) => ({ ...prev, input: "" }));
+
       setMessages((prev) => ({
         ...prev,
-        user: prev.user.filter((msg) => msg == prompt.input),
+        user: prev.user.filter((msg) => msg !== prompt.input),
       }));
 
       console.error(error);
@@ -362,7 +357,7 @@ export const ChatComp = (props: IProps) => {
                           submit ? null : handleSubmit();
                         }}
                         disabled={submit}
-                        className={`absolute right-0 top-[3.9rem] bg-blue-1 hover:bg-blue-2 text-white py-2 px-4 rounded-full mr-4 mt-2 z-10 hover:cursor-pointer ${
+                        className={`absolute right-0 top-[3.9rem] bg-blue-1 hover:bg-blue-2 text-white py-2 px-4 rounded-full mr-4 mt-2 z-10 ${
                           submit ? "opacity-90 bg-blue-4 cursor-not-allowed" : ""
                         }`}
                       >

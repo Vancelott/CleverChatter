@@ -84,6 +84,10 @@ export const ChatComp = (props: IChatComp) => {
       return;
     }
 
+    if (pages.page + 1 > pages.totalPages) {
+      return;
+    }
+
     const fetchedMessages = await GetMessages(
       chatSlug,
       pages.page,
@@ -92,7 +96,7 @@ export const ChatComp = (props: IChatComp) => {
     );
 
     if (fetchedMessages == null || fetchedMessages.AiMessages.length <= 0) {
-      return;
+      return null;
     }
 
     const aiMsgs = fetchedMessages!.AiMessages.map((msg) => msg.messageContent);
@@ -103,20 +107,20 @@ export const ChatComp = (props: IChatComp) => {
       user: [...userMsgs, ...prev.user],
     }));
 
-    if (pages.page + 1 > pages.totalPages) {
-      setPages((prev) => ({
-        ...prev,
-        page: prev.page + 1,
-      }));
-    }
+    setPages((prev) => ({
+      ...prev,
+      page: prev.page + 1,
+    }));
   }, [chatSlug, pages]);
 
   useEffect(() => {
     if (!isInitial) {
-      const timeout = setTimeout(() => {
+      const timeout = setTimeout(async () => {
         if (entryVisibility === true) {
-          fetchMessages();
-          window.scrollTo({ left: 0, top: 500, behavior: "smooth" });
+          const fetchedMessages = await fetchMessages();
+          if (fetchedMessages != null) {
+            window.scrollTo({ left: 0, top: 500, behavior: "smooth" });
+          }
         }
       }, 500);
       return () => {
@@ -229,8 +233,7 @@ export const ChatComp = (props: IChatComp) => {
     }
 
     if (!err) {
-      setPrompt((prev) => ({ ...prev, output: currentReply, input: "" }));
-      // setPrompt((prev) => ({ ...prev, output: currentReply }));
+      setPrompt((prev) => ({ ...prev, output: currentReply }));
       setMessages((prev) => ({
         ...prev,
         ai: [...prev.ai, currentReply],

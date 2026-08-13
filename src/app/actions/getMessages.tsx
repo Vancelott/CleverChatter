@@ -1,8 +1,6 @@
 "use server";
 
-import { useSession } from "next-auth/react";
 import { prisma } from "../libs/prismadb";
-import GetTotalMessages from "./getTotalMessages";
 
 const GetMessages = async (
   chatSlug: string,
@@ -22,12 +20,12 @@ const GetMessages = async (
           // skip: (currentPage - 1) * pageSize,
           skip: skipValue,
           take: pageSize,
-          // orderBy: {
-          //   createdAt: "asc",
-          // },
           orderBy: {
-            id: "desc",
+            createdAt: "desc",
           },
+          // orderBy: {
+          //   id: "desc",
+          // },
           select: {
             messageContent: true,
           },
@@ -35,23 +33,23 @@ const GetMessages = async (
         AiMessages: {
           skip: skipValue,
           take: pageSize,
-          // orderBy: {
-          //   createdAt: "asc",
-          // },
           orderBy: {
-            id: "desc",
+            createdAt: "desc",
           },
+          // orderBy: {
+          //   id: "desc",
+          // },
           select: {
             messageContent: true,
           },
         },
       },
-      // take: pageSize,
     });
 
     return messages;
   } else {
     console.log("All of the currently available messages have been fetched.");
+    // TODO consider returning { UserMessages: null, AiMessages: null };
     return null;
   }
 };

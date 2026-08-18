@@ -9,7 +9,6 @@ const GetMessages = async (
   totalPages: number,
 ) => {
   const skipValue = (page - 1) * pageSize + (page === 1 ? 0 : 0);
-
   if (page <= totalPages) {
     const messages = await prisma.conversation.findFirst({
       where: {
@@ -17,15 +16,11 @@ const GetMessages = async (
       },
       select: {
         UserMessages: {
-          // skip: (currentPage - 1) * pageSize,
           skip: skipValue,
           take: pageSize,
           orderBy: {
-            createdAt: "desc",
+            id: "asc",
           },
-          // orderBy: {
-          //   id: "desc",
-          // },
           select: {
             messageContent: true,
           },
@@ -34,11 +29,8 @@ const GetMessages = async (
           skip: skipValue,
           take: pageSize,
           orderBy: {
-            createdAt: "desc",
+            id: "asc",
           },
-          // orderBy: {
-          //   id: "desc",
-          // },
           select: {
             messageContent: true,
           },

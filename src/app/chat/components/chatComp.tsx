@@ -63,7 +63,11 @@ export const ChatComp = (props: IChatComp) => {
     if (!chatSlug && prompt.output.length > 1 && selectedChildRepo.length > 1) {
       const create = async () => {
         let slug;
-        const chat = await createChat(firstUserPrompt, prompt.output, selectedChildRepo);
+        const chat = await createChat(
+          displayedFirstPrompt,
+          prompt.output,
+          selectedChildRepo,
+        );
         slug = chat?.slug!;
 
         // TODO call updateRepo instead, to add the slug directly?
@@ -87,7 +91,6 @@ export const ChatComp = (props: IChatComp) => {
     if (pages.page + 1 > pages.totalPages) {
       return;
     }
-
     const fetchedMessages = await GetMessages(
       chatSlug,
       pages.page,
@@ -103,8 +106,8 @@ export const ChatComp = (props: IChatComp) => {
     const userMsgs = fetchedMessages!.UserMessages.map((msg) => msg.messageContent);
 
     setMessages((prev) => ({
-      ai: [...aiMsgs, ...prev.ai],
-      user: [...userMsgs, ...prev.user],
+      ai: [...prev.ai, ...aiMsgs],
+      user: [...prev.user, ...userMsgs],
     }));
 
     setPages((prev) => ({

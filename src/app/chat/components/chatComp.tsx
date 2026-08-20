@@ -336,7 +336,7 @@ export const ChatComp = (props: IChatComp) => {
           <>
             <Suspense fallback={<Loading />}>
               <div className="w-full min-h-screen mx-auto flex flex-col justify-between max-w-5xl px-8 md:px-24 mb-6 mt-10">
-                <div className="flex justify-start flex-col">
+                <div className="flex justify-start flex-col-reverse">
                   {messages.user.length === 0 && <Loading />}
                   {messages.user?.map((userMessage: string, index) => (
                     <div key={index} ref={index == 0 ? myRef : null}>

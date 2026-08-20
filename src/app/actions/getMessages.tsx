@@ -19,7 +19,7 @@ const GetMessages = async (
           skip: skipValue,
           take: pageSize,
           orderBy: {
-            id: "asc",
+            id: "desc",
           },
           select: {
             messageContent: true,
@@ -29,7 +29,7 @@ const GetMessages = async (
           skip: skipValue,
           take: pageSize,
           orderBy: {
-            id: "asc",
+            id: "desc",
           },
           select: {
             messageContent: true,

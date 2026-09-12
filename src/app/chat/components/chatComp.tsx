@@ -17,6 +17,7 @@ import UpdateChat from "../../actions/updateChat";
 import { createPrompt } from "../../libs/helpers";
 import GetMessages from "@/app/actions/getMessages";
 import SuspenseMessage from "./suspenseMessage";
+import MarkdownIt from "markdown-it";
 
 const firstUserPrompt = `Generate 3-5 one line questions in bullet points that I might get asked in a coding related job interview. Respond in JSON, and create a "cache" to store 2 to 3 additional short questions about the provided repo, and a short summary of the repo's contents, as well as 1 or 2 code snippets that you find interesting, which you can use to generate more questions in case the initial ones are already exhausted. The response has to be in valid JSON format, with only a response and cache as parents.`;
 
@@ -57,6 +58,8 @@ export const ChatComp = (props: IChatComp) => {
   });
 
   const router = useRouter();
+
+  const md = new MarkdownIt({ breaks: true });
 
   // creates chat once the full output from the ai is available
   useEffect(() => {
@@ -117,19 +120,21 @@ export const ChatComp = (props: IChatComp) => {
   }, [chatSlug, pages]);
 
   useEffect(() => {
-    if (!isInitial) {
-      const timeout = setTimeout(async () => {
-        if (entryVisibility === true) {
-          const fetchedMessages = await fetchMessages();
-          if (fetchedMessages != null) {
-            window.scrollTo({ left: 0, top: 500, behavior: "smooth" });
-          }
-        }
-      }, 500);
-      return () => {
-        clearTimeout(timeout);
-      };
+    if (isInitial) {
+      return;
     }
+
+    const timeout = setTimeout(async () => {
+      if (entryVisibility === true) {
+        const fetchedMessages = await fetchMessages();
+        if (fetchedMessages != null) {
+          window.scrollTo({ left: 0, top: 500, behavior: "smooth" });
+        }
+      }
+    }, 500);
+    return () => {
+      clearTimeout(timeout);
+    };
   }, [entryVisibility, fetchMessages, isInitial]);
 
   useEffect(() => {
@@ -191,6 +196,7 @@ export const ChatComp = (props: IChatComp) => {
         } else {
           let text = parsedData.candidates?.[0]?.content?.parts?.[0]?.text!;
           // TODO maybe use jsonParser.write(JSON.stringify(text)) instead? This might not be necessary if the schema is improved.
+          // this was put in place because of occassional `unexpected non-whitespace character` errors
           text = text.replace("```json", "").replace("```", "").replace("`", "");
 
           if (isInitial) {
@@ -200,7 +206,9 @@ export const ChatComp = (props: IChatComp) => {
                 currentReply += objects;
                 return;
               }
-              currentReply += value;
+              const htmlResult = md.renderInline(`${value}`);
+
+              currentReply += htmlResult;
             };
 
             cacheParser.onValue = ({ value, key, parent, stack }) => {
@@ -212,14 +220,17 @@ export const ChatComp = (props: IChatComp) => {
                 currentCache += objects;
                 return;
               }
-              currentCache += value;
+              // no point in storing the cache in html (at least for now)
+              currentReply += value;
             };
 
             jsonParser.write(text);
             cacheParser.write(text);
           } else {
             // no special parsing is needed
-            currentReply += text;
+            const htmlResult = md.renderInline(`${text}`);
+
+            currentReply += htmlResult;
           }
 
           setPrompt((prev) => ({
@@ -261,7 +272,9 @@ export const ChatComp = (props: IChatComp) => {
   const handleSubmit = async () => {
     if (prompt.input.length <= 0 && !isInitial) {
       toast.error("Please type in a message.");
+      return;
     }
+
     setSubmit(true);
 
     try {
@@ -339,15 +352,27 @@ export const ChatComp = (props: IChatComp) => {
                 <div className="flex justify-start flex-col-reverse">
                   {messages.user.length === 0 && <Loading />}
                   {messages.user?.map((userMessage: string, index) => (
-                    <div key={index} ref={index == 0 ? myRef : null}>
+                    <div
+                      key={index}
+                      // last message because of flex-col-reverse
+                      ref={index == messages.user.length - 1 ? myRef : null}
+                    >
                       <p className="px-4 py-6 bg-blue-0 text-white rounded-3xl my-6">
                         {userMessage}
                       </p>
                       <div className="px-4 py-6 bg-blue-1 text-white rounded-3xl">
                         {messages.ai[index] ? (
-                          messages.ai[index]
+                          <>
+                            <div
+                              dangerouslySetInnerHTML={{ __html: messages.ai[index] }}
+                            />
+                          </>
                         ) : prompt.streamedOutput.length > 0 ? (
-                          prompt.streamedOutput
+                          <>
+                            <div
+                              dangerouslySetInnerHTML={{ __html: prompt.streamedOutput }}
+                            />
+                          </>
                         ) : (
                           <SuspenseMessage />
                         )}

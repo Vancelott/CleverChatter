@@ -12,6 +12,7 @@ export const authOptions: AuthOptions = {
   providers: [
     GitHubProvider({
       clientId: inDevEnvironment ? process.env.DEV_GITHUB_ID! : process.env.GITHUB_ID!,
+      issuer: "https://github.com/login/oauth",
       clientSecret: inDevEnvironment
         ? process.env.DEV_GITHUB_SECRET!
         : process.env.GITHUB_SECRET!,

@@ -18,6 +18,7 @@ import { createPrompt } from "../../libs/helpers";
 import GetMessages from "@/app/actions/getMessages";
 import SuspenseMessage from "./suspenseMessage";
 import MarkdownIt from "markdown-it";
+import { LoadingSpinner } from "../../../../components/loadingSpinner";
 
 const firstUserPrompt = `Generate 3-5 one line questions in bullet points that I might get asked in a coding related job interview. Respond in JSON, and create a "cache" to store 2 to 3 additional short questions about the provided repo, and a short summary of the repo's contents, as well as 1 or 2 code snippets that you find interesting, which you can use to generate more questions in case the initial ones are already exhausted. The response has to be in valid JSON format, with only a response and cache as parents.`;
 
@@ -46,6 +47,7 @@ export const ChatComp = (props: IChatComp) => {
   const [selectedChildRepo, setSelectedChildRepo] = useState("");
   const [repoData, setRepoData] = useState<string[]>(props.repoData ?? []);
   const [cache, setCache] = useState(props.cache ?? "");
+  const [fetchingMessages, setFetchingMessages] = useState(false);
 
   const messagesRef = useRef(null);
 
@@ -94,6 +96,9 @@ export const ChatComp = (props: IChatComp) => {
     if (pages.page + 1 > pages.totalPages) {
       return;
     }
+
+    setFetchingMessages(true);
+
     const fetchedMessages = await GetMessages(
       chatSlug,
       pages.page,
@@ -102,6 +107,7 @@ export const ChatComp = (props: IChatComp) => {
     );
 
     if (fetchedMessages == null || fetchedMessages.AiMessages.length <= 0) {
+      setFetchingMessages(false);
       return null;
     }
 
@@ -117,6 +123,8 @@ export const ChatComp = (props: IChatComp) => {
       ...prev,
       page: prev.page + 1,
     }));
+
+    setFetchingMessages(false);
   }, [chatSlug, pages]);
 
   useEffect(() => {
@@ -349,7 +357,10 @@ export const ChatComp = (props: IChatComp) => {
           <>
             <Suspense fallback={<Loading />}>
               <div className="w-full min-h-screen mx-auto flex flex-col justify-between max-w-5xl px-8 md:px-24 mb-6 mt-10">
-                <div className="flex justify-start flex-col-reverse">
+                <div className="flex justify-center transition-all delay-500">
+                  {fetchingMessages ? <LoadingSpinner /> : null}
+                </div>
+                <div className="flex justify-start flex-col-reverse transition-all transition-discrete">
                   {messages.user.length === 0 && <Loading />}
                   {messages.user?.map((userMessage: string, index) => (
                     <div

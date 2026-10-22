@@ -7,6 +7,7 @@ import octokit from "@/app/libs/octokit";
 import ChatComp from "../components/chatComp";
 import GetMessages from "@/app/actions/getMessages";
 import GetTotalMessages from "@/app/actions/getTotalMessages";
+import { IMessages } from "@/app/types";
 
 export default async function Slug({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -33,19 +34,24 @@ export default async function Slug({ params }: { params: Promise<{ slug: string 
     username,
   });
 
+  // TODO get rid of title
   const repo = await GetRepo("", slug);
   const cache = chat && chat.cache ? chat.cache : "";
   const repoData = repo?.repoData ? repo.repoData : [];
 
   const initialMessages = await GetMessages(slug, page, pageSize, totalPages);
 
-  let msgs;
+  let sortedMessages: IMessages[] = [];
 
-  let aiMessages = initialMessages?.AiMessages?.map((msg) => msg.messageContent) ?? [];
-  let userMessages =
-    initialMessages?.UserMessages?.map((msg) => msg.messageContent) ?? [];
-
-  msgs = { ai: aiMessages, user: userMessages };
+  if (initialMessages != null && initialMessages?.UserMessages.length > 0) {
+    for (let i = 0; i < initialMessages?.UserMessages.length; i++) {
+      sortedMessages.push({
+        ai: initialMessages?.AiMessages[i].messageContent!,
+        user: initialMessages?.UserMessages[i].messageContent!,
+        id: i,
+      });
+    }
+  }
 
   return (
     <ChatComp
@@ -54,7 +60,7 @@ export default async function Slug({ params }: { params: Promise<{ slug: string 
       slug={slug}
       cache={cache}
       repoData={repoData}
-      initialMessages={msgs}
+      initialMessages={sortedMessages}
       pageData={{
         totalMessages: totalMessages,
         pageSize: pageSize,

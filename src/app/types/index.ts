@@ -133,9 +133,10 @@ export interface MessagesData {
   createdAt: Date;
 }
 
-export interface CurrentMessages {
-  ai: string[];
-  user: string[];
+export interface IMessages {
+  ai: string;
+  user: string;
+  id: number;
 }
 
 export interface IChatComp {
@@ -144,7 +145,7 @@ export interface IChatComp {
   slug?: string;
   cache?: string;
   repoData?: string[];
-  initialMessages?: CurrentMessages;
+  initialMessages?: IMessages[];
   pageData?: { totalMessages: number; pageSize: number; totalPages: number };
 }
 

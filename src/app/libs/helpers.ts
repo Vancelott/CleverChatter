@@ -1,4 +1,4 @@
-import { CurrentMessages, IPrompt } from "../types";
+import { IMessages, IPrompt } from "../types";
 
 type MessageRole = "user" | "model";
 
@@ -74,7 +74,7 @@ const newMessage = (msg: string, role: MessageRole) => {
 };
 
 export const createPrompt = async (
-  messages: CurrentMessages,
+  messages: IMessages[],
   currentPrompt: string,
   cache: string,
   isInitial: boolean,
@@ -90,12 +90,13 @@ export const createPrompt = async (
       maxOutputTokens: 2000,
     },
   };
-  for (let i = 0; i < messages.user.length; i++) {
-    if (messages.user[i].length > 0) {
-      prompt.contents.push(newMessage(messages.user[i], "user"));
+
+  for (let i = 0; i < messages.length; i++) {
+    if (messages[i].user.length > 0) {
+      prompt.contents.push(newMessage(messages[i].user, "user"));
     }
-    if (messages.ai[i].length > 0) {
-      prompt.contents.push(newMessage(messages.ai[i], "model"));
+    if (messages[i].ai.length > 0) {
+      prompt.contents.push(newMessage(messages[i].ai, "model"));
     }
   }
   prompt.contents.push(newMessage(currentPrompt, "user"));

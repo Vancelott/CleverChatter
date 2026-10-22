@@ -3,7 +3,7 @@
 import React, { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { useInView } from "react-intersection-observer";
 import { RepoList } from "../components/repoList";
-import { Repository, CurrentMessages, IChatComp } from "../../types";
+import { Repository, IMessages, IChatComp } from "../../types";
 import createChat from "../../actions/createChat";
 import UpdateMessages from "../../actions/updateMessages";
 import { useRouter } from "next/navigation";
@@ -28,6 +28,7 @@ const displayedFirstPrompt =
 export const ChatComp = (props: IChatComp) => {
   const { username, repos, initialMessages, pageData } = props;
   const { ref: myRef, inView: entryVisibility, entry } = useInView(); // used to fetch messages once the top message is visible
+  let messagesId = 0;
 
   const [submit, setSubmit] = useState(false);
   const [prompt, setPrompt] = useState({
@@ -36,10 +37,7 @@ export const ChatComp = (props: IChatComp) => {
     streamedOutput: "",
   });
 
-  const [messages, setMessages] = useState<CurrentMessages>({
-    ai: [...(initialMessages?.ai ?? [])],
-    user: [...(initialMessages?.user ?? [])],
-  });
+  const [messages, setMessages] = useState<IMessages[]>(initialMessages ?? []);
 
   const [isInitial, setIsInitial] = useState(props.cache == null || props.slug == null);
   const [hideList, setHideList] = useState(false);
@@ -48,8 +46,6 @@ export const ChatComp = (props: IChatComp) => {
   const [repoData, setRepoData] = useState<string[]>(props.repoData ?? []);
   const [cache, setCache] = useState(props.cache ?? "");
   const [fetchingMessages, setFetchingMessages] = useState(false);
-
-  const messagesRef = useRef(null);
 
   // page "1" is fetched initially in "[slug]/page.tsx" and the pageData is optional, as it is only used in `[slug]`
   const [pages, setPages] = useState({
@@ -82,7 +78,7 @@ export const ChatComp = (props: IChatComp) => {
 
         await UpdateChat(slug, cache);
       };
-      setPrompt((prev) => ({ ...prev, output: "" }));
+      setPrompt((prev) => ({ ...prev, output: "", streamedOutput: "" }));
       create();
     }
     return () => {};
@@ -107,17 +103,23 @@ export const ChatComp = (props: IChatComp) => {
     );
 
     if (fetchedMessages == null || fetchedMessages.AiMessages.length <= 0) {
+      // TODO create state to indicate all messages are fetched?
       setFetchingMessages(false);
       return null;
     }
 
-    const aiMsgs = fetchedMessages!.AiMessages.map((msg) => msg.messageContent);
-    const userMsgs = fetchedMessages!.UserMessages.map((msg) => msg.messageContent);
+    let msgs: IMessages[] = [];
 
-    setMessages((prev) => ({
-      ai: [...prev.ai, ...aiMsgs],
-      user: [...prev.user, ...userMsgs],
-    }));
+    // in this case it doesn't matter which array's length is used, as an error in the ai's response will result in neither the user input, nor the ai "response" getting added to the db
+    for (let i = 0; i < fetchedMessages.UserMessages.length; i++) {
+      msgs.push({
+        ai: fetchedMessages?.AiMessages[i].messageContent!,
+        user: fetchedMessages?.UserMessages[i].messageContent!,
+        id: messages.length + i,
+      });
+    }
+
+    setMessages((prev) => [...prev, ...msgs]);
 
     setPages((prev) => ({
       ...prev,
@@ -125,7 +127,7 @@ export const ChatComp = (props: IChatComp) => {
     }));
 
     setFetchingMessages(false);
-  }, [chatSlug, pages]);
+  }, [chatSlug, messages.length, pages.page, pages.pageSize, pages.totalPages]);
 
   useEffect(() => {
     if (isInitial) {
@@ -155,7 +157,7 @@ export const ChatComp = (props: IChatComp) => {
   useEffect(() => {
     if (chatSlug && prompt.output.length > 0) {
       UpdateMessages(prompt.input, prompt.output, chatSlug);
-      setPrompt((prev) => ({ ...prev, input: "", output: "" }));
+      setPrompt({ input: "", output: "", streamedOutput: "" });
     }
   }, [chatSlug, prompt.input, prompt.output]);
 
@@ -163,7 +165,7 @@ export const ChatComp = (props: IChatComp) => {
     return `Answer the following in 200 words or less: ${firstUserPrompt}. The questions have to be specific for the code attached after this sentence: """${decodedContent}""" `;
   };
 
-  const handleInputSubmit = async (input: string) => {
+  const handleInputSubmit = async (input: string, turnId: number) => {
     let currentReply = "";
     let currentCache = "";
     let err = false;
@@ -205,7 +207,10 @@ export const ChatComp = (props: IChatComp) => {
           let text = parsedData.candidates?.[0]?.content?.parts?.[0]?.text!;
           // TODO maybe use jsonParser.write(JSON.stringify(text)) instead? This might not be necessary if the schema is improved.
           // this was put in place because of occassional `unexpected non-whitespace character` errors
-          text = text.replace("```json", "").replace("```", "").replace("`", "");
+          text = text
+            .replace(/```json/g, "")
+            .replace(/```/g, "")
+            .replace(/`/g, "");
 
           if (isInitial) {
             jsonParser.onValue = ({ value, key, parent, stack }) => {
@@ -255,11 +260,15 @@ export const ChatComp = (props: IChatComp) => {
     }
 
     if (!err) {
-      setPrompt((prev) => ({ ...prev, output: currentReply }));
-      setMessages((prev) => ({
+      setPrompt((prev) => ({
         ...prev,
-        ai: [...prev.ai, currentReply],
+        output: currentReply,
+        streamedOutput: currentReply,
       }));
+
+      setMessages((prev) =>
+        prev.map((turn) => (turn.id === turnId ? { ...turn, ai: currentReply } : turn)),
+      );
     }
 
     return currentReply;
@@ -284,39 +293,38 @@ export const ChatComp = (props: IChatComp) => {
     }
 
     setSubmit(true);
+    let turnId = messages.length;
 
     try {
       if (isInitial) {
         setHideList(true);
-        setMessages((prev) => ({
+        setMessages((prev) => [
+          { ai: "", user: displayedFirstPrompt, id: messages.length },
           ...prev,
-          user: [...prev.user, displayedFirstPrompt],
-        }));
+        ]);
 
         const repoContent = repoData.length > 0 ? repoData : await handleRepoFetch();
 
         // TODO use createPrompt here?
         const initialInput = await createFirstInput(repoContent);
         repoData.length <= 0 ? setRepoData(() => repoContent) : null;
-        await handleInputSubmit(initialInput);
+        await handleInputSubmit(initialInput, turnId);
 
         setIsInitial(false);
       } else {
-        setMessages((prev) => ({
-          ...prev,
-          user: [...prev.user, prompt.input],
-        }));
-        await handleInputSubmit(prompt.input);
+        setMessages((prev) => [{ ai: "", user: prompt.input, id: turnId }, ...prev]);
+        await handleInputSubmit(prompt.input, turnId);
       }
     } catch (error) {
       setSubmit(false);
       setHideList(false);
       setPrompt((prev) => ({ ...prev, input: "" }));
 
-      setMessages((prev) => ({
-        ...prev,
-        user: prev.user.filter((msg) => msg !== prompt.input),
-      }));
+      const filteredMessages = messages.filter(
+        (message) => message.user !== prompt.input,
+      );
+
+      setMessages(filteredMessages);
 
       console.error(error);
       toast.error("An error occurred. Please try again later.");
@@ -353,37 +361,31 @@ export const ChatComp = (props: IChatComp) => {
           </>
         )}
         {/* Messages and chat input*/}
-        {(!isInitial || messages.user.length > 0) && (
+        {(!isInitial || messages.length > 0) && (
           <>
             <Suspense fallback={<Loading />}>
               <div className="w-full min-h-screen mx-auto flex flex-col justify-between max-w-5xl px-8 md:px-24 mb-6 mt-10">
-                <div className="flex justify-center transition-all delay-500">
+                <div className="flex justify-center">
                   {fetchingMessages ? <LoadingSpinner /> : null}
                 </div>
-                <div className="flex justify-start flex-col-reverse transition-all transition-discrete">
-                  {messages.user.length === 0 && <Loading />}
-                  {messages.user?.map((userMessage: string, index) => (
+                <div className="flex justify-start flex-col-reverse">
+                  {messages.map((turn, index) => (
                     <div
-                      key={index}
-                      // last message because of flex-col-reverse
-                      ref={index == messages.user.length - 1 ? myRef : null}
+                      key={turn.id}
+                      ref={turn.id + 1 == messages.length ? myRef : null}
                     >
+                      <p>ID: {turn.id}</p>
+                      <p>Arr index: {index}</p>
                       <p className="px-4 py-6 bg-blue-0 text-white rounded-3xl my-6">
-                        {userMessage}
+                        {turn.user}
                       </p>
                       <div className="px-4 py-6 bg-blue-1 text-white rounded-3xl">
-                        {messages.ai[index] ? (
-                          <>
-                            <div
-                              dangerouslySetInnerHTML={{ __html: messages.ai[index] }}
-                            />
-                          </>
+                        {turn.ai ? (
+                          <div dangerouslySetInnerHTML={{ __html: turn.ai }} />
                         ) : prompt.streamedOutput.length > 0 ? (
-                          <>
-                            <div
-                              dangerouslySetInnerHTML={{ __html: prompt.streamedOutput }}
-                            />
-                          </>
+                          <div
+                            dangerouslySetInnerHTML={{ __html: prompt.streamedOutput }}
+                          />
                         ) : (
                           <SuspenseMessage />
                         )}
@@ -391,7 +393,7 @@ export const ChatComp = (props: IChatComp) => {
                     </div>
                   ))}
                 </div>
-                {(selectedChildRepo || messages.ai.length > 0) && (
+                {(selectedChildRepo || messages[0].ai.length > 0) && (
                   <div className="static mb-16 flex-shrink-0">
                     <div className="relative flex flex-col">
                       <button

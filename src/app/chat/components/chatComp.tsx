@@ -374,8 +374,6 @@ export const ChatComp = (props: IChatComp) => {
                       key={turn.id}
                       ref={turn.id + 1 == messages.length ? myRef : null}
                     >
-                      <p>ID: {turn.id}</p>
-                      <p>Arr index: {index}</p>
                       <p className="px-4 py-6 bg-blue-0 text-white rounded-3xl my-6">
                         {turn.user}
                       </p>

@@ -8,11 +8,16 @@ import {
   HomeIcon,
   PlusIcon,
 } from "@heroicons/react/24/solid";
-import { ChatBubbleLeftRightIcon } from "@heroicons/react/24/outline";
+import {
+  ChatBubbleLeftRightIcon,
+  TrashIcon,
+  XMarkIcon,
+} from "@heroicons/react/24/outline";
 import { ChatData, User, ISortedChats } from "@/app/types";
 import { isBefore, isToday, subDays } from "date-fns";
 import toast from "react-hot-toast";
 import { redirect, RedirectType } from "next/navigation";
+import DeleteChat from "@/app/actions/deleteChat";
 
 export const ChatNav = ({
   currentUser,
@@ -24,12 +29,14 @@ export const ChatNav = ({
   // TODO set to false if more than 1 chat in the list?
   const [hidden, setHidden] = useState(true);
   const [slug, setSlug] = useState("");
+  const [showDelete, setShowDelete] = useState(false);
 
   const [sortedChats, setSortedChats] = useState<ISortedChats[]>([]);
 
   const queryParams = new URLSearchParams("=");
   const router = useRouter();
 
+  // TODO move to helpers.ts?
   const sortChats = useCallback(async () => {
     if (allChats && allChats.length <= 0) {
       return;
@@ -74,6 +81,23 @@ export const ChatNav = ({
     router.push(`/chat/${selectedChatSlug}`, { scroll: false });
   };
 
+  const handleDelete = async (slug: string) => {
+    const isChatDeleted = await DeleteChat(slug);
+
+    if (!isChatDeleted) {
+      toast.error("The chat could not be deleted, please try again later");
+      setShowDelete(false);
+      return;
+    }
+
+    setSortedChats((prev) =>
+      prev.map((group) => ({
+        ...group,
+        chats: group.chats.filter((chat) => chat.slug !== slug),
+      })),
+    );
+  };
+
   const handleNewChat = () => {
     if (currentUser) {
       router.replace("/chat", { scroll: false });
@@ -82,7 +106,7 @@ export const ChatNav = ({
     }
   };
   const handleHome = () => {
-    router.push(`/`, { scroll: false });
+    router.push(`/`);
   };
 
   return (
@@ -127,19 +151,52 @@ export const ChatNav = ({
                 if (group.chats.length <= 0) return null;
 
                 return (
-                  <div key={group.label} className="">
+                  <div key={group.label}>
                     <h2 className="text-gray-200 text-sm font-semibold px-1">
                       {group.label}
                     </h2>
                     {group.chats.map((chat) => (
-                      <div key={chat.id}>
+                      <div key={chat.id} className="grid">
+                        {/* Chat Delete Popup */}
+                        {showDelete && slug == chat.slug ? (
+                          <div className="flex col-start-1 row-start-1 z-1 flex-row place-items-center justify-between px-3 bg-gray-600 gap-2 rounded-md">
+                            <p className="font-medium">Delete this chat?</p>
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => handleDelete(slug)}
+                                className="rounded-lg bg-blue-1 hover:bg-blue-2 text-gray-100 p-1 "
+                              >
+                                Delete
+                              </button>
+                              <button onClick={() => setShowDelete(false)}>
+                                <XMarkIcon className="w-6 h-6 text-gray-100 hover:text-gray-300" />
+                              </button>
+                            </div>
+                          </div>
+                        ) : null}
                         <div
-                          onClick={() => handleClick(chat.slug)}
-                          className={`text-gray-300 hover:bg-gray-700 hover:text-white
-      group flex items-center px-2 py-2 text-sm font-medium rounded-md cursor-pointer space-x-2 w-[268px]
+                          className={`flex flex-row col-start-1 row-start-1 z-0 text-gray-300 hover:bg-gray-700 hover:text-white
+      group px-2 py-2 text-sm font-medium rounded-md relative space-x-2 w-[268px]
       ${slug == chat.slug ? "bg-gray-600 text-gray-100" : "bg-gray-800"}`}
                         >
-                          <p className="truncate text-ellipsis">{chat.title}</p>
+                          <p
+                            className="truncate text-ellipsis cursor-pointer my-1"
+                            onClick={() => handleClick(chat.slug)}
+                          >
+                            {chat.title}
+                          </p>
+                          {/* TODO */}
+                          {/* <p className="hidden group-hover:block bg-gray-500 py-1 px-1 rounded-xl text-sm">
+                            Edit
+                          </p> */}
+                          <button
+                            onClick={() => {
+                              setShowDelete(!showDelete), setSlug(chat.slug);
+                            }}
+                            className="hidden group-hover:block bg-blue-1 hover:bg-blue-2 rounded-xl text-sm p-1 ml-3 cursor-pointer"
+                          >
+                            <TrashIcon className="h-5 w-5 text-gray-100" />
+                          </button>
                         </div>
                       </div>
                     ))}
@@ -151,13 +208,12 @@ export const ChatNav = ({
         {/* New Chat & Home */}
         <div className="flex-shrink-0 bg-gray-700 p-4 justify-between border-t-2 border-gray-500">
           <div className="flex justify-start flex-row gap-4">
-            {/* <div className="flex-none border py-2 px-2 rounded-md"> */}
-            <button onClick={handleHome}>
+            <button onClick={() => handleHome()}>
               <div className="flex-none bg-gray-500 hover:bg-gray-400 py-2 px-2 rounded-md cursor-pointer">
                 <HomeIcon className="h-7 w-7 text-gray-200" />
               </div>
             </button>
-            <button className="flex-grow" onClick={handleNewChat}>
+            <button className="flex-grow" onClick={() => handleNewChat()}>
               <div className="flex flex-row gap-1 items-center justify-center border border-gray-200 hover:bg-blue-2 py-2 pr-2 px-1 rounded-md font-semibold text-md cursor-pointer">
                 <PlusIcon className="h-6 w-6 text-gray-100" />
                 <p className="text-gray-200">New Chat</p>

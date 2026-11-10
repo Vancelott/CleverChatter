@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { prisma } from "../libs/prismadb";
 import getCurrentUser from "./getCurrentUser";
 
@@ -9,7 +10,6 @@ const GetAllChats = async () => {
 
     if (!currentUser) {
       console.log("No currentUser found in GetAllChats.");
-
       return null;
     }
 
@@ -18,6 +18,8 @@ const GetAllChats = async () => {
         userId: currentUser.id,
       },
     });
+
+    revalidatePath("/chat");
 
     return allChats;
   } catch (error: any) {
